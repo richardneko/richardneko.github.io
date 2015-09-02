@@ -3,19 +3,49 @@
 <head>
   <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
   <meta content="utf-8" http-equiv="encoding">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>HTML5 Painter</title>
-  <link rel=stylesheet type="text/css" href="css/paint.css"> 
+  <link rel=stylesheet type="text/css" href="css/paint.css">
+  <script type='text/javascript' src='js/jquery-1.11.3.min.js'></script>
   <script type="text/javascript" src="js/paint.js"></script>
 </head>
-<body onload="init();">
-  <div id="ctrlPanel">
-    <div id="black" class="color"></div>
-    <div id="blue" class="color"></div>
-    <div id="red" class="color"></div>
-    <div id="yellow" class="color"></div>
-    <div id="white" class="color"></div>
-    <input type="button" id="reset" value="Clean"></input>
-  </div>
+<body>
   <canvas id="paintCanvas" width="1280" height="720"></canvas>
+  <nav id='menu'>
+    <ul>
+      <li id='size' class='s_green'>Size
+        <ul>
+          <li>5px</li>
+          <li>10px</li>
+          <li>20px</li>
+          <li>40px</li>
+        </ul>
+      </li>
+      </li>
+      <li id='color' class='s_blue'>Color
+        <ul>
+          <li>Black</li>
+          <li>Blue</li>
+          <li>Red</li>
+          <li>Yellow</li>
+        </ul>
+      </li>
+      <li id='zoom' class='s_yellow'>Zoom
+        <ul>
+          <li>Zoom1</li>
+          <li>Zoom2</li>
+          <li>Zoom3</li>
+          <li>Zoom4</li>
+        </ul>
+      </li>
+      <li id='erase' class='s_red'>Erase
+        <ul>
+          <li>Eraser</li>
+          <li>Clean</li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+  <div id='setting'>Setting</div>
 </body>
 </html>
