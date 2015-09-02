@@ -1,0 +1,39 @@
+canvas {
+  border: 1px solid black;
+  position: absolute;
+  top: 45px;
+  left: 10px;
+}
+#ctrlPanel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+#reset {
+  margin-top: 3px;
+  margin-left: 5px;
+  float: left;
+}
+.color {
+  width: 20px;
+  height: 20px;
+  float: left;
+  margin-left: 5px;
+  margin-top: 5px;
+  border: 1px solid black;
+}
+#black {
+  background-color: black;
+}
+#blue {
+  background-color: blue;
+}
+#red {
+  background-color: red;
+}
+#yellow {
+  background-color: yellow;
+}
+#white {
+  background-color: white;
+}
