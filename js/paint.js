@@ -22,6 +22,7 @@ $(function() {
   var currentSize = 0;
 
   initCanvasSettings();
+  initTouchListeners();
   initMouseListeners();
   initMenuSettings();
 
