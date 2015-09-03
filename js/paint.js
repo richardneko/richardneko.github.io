@@ -22,6 +22,7 @@ $(function() {
   ctx.lineCap = 'round';
   ctx.lineWidth = 15;
   
+  initTouchListeners();
   initMouseListeners();
   initMenuSettings();
   for (var i = 0; i < colors.length; i ++)
@@ -55,6 +56,35 @@ $(function() {
 
     for (var i = 0; i < colors.length; i ++)
       addColorListeners(i);
+  }
+
+  // Add touch events
+  function initTouchListeners() {
+    canvas.addEventListener('touchstart', function (evt) {
+      evt.preventDefault();
+      var pos = getTouchPos(canvas, evt);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      isDrawing = true;
+    });
+
+    canvas.addEventListener('touchmove', function (evt) {
+      if (isDrawing) {
+        evt.preventDefault();
+        var pos = getMousePos(canvas, evt);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+    }, false);
+
+    canvas.addEventListener('touchend', function (evt) {
+      if (isDrawing) {
+        var pos = getTouchPos(canvas, evt);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        isDrawing = false;
+      }
+    }, false);
   }
 
   // Add mouse events
@@ -102,6 +132,16 @@ $(function() {
     return {
       x: evt.clientX - rect.left,
       y: evt.clientY - rect.top
+    };
+  }
+
+  // Get Touch Position(X, Y)
+  function getTouchPos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    var touch = evt.targetTouches[0];
+    return {
+      x: touch.pageX - rect.left,
+      y: touch.pageY - rect.top
     };
   }
 
