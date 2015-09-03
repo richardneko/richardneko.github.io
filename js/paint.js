@@ -131,6 +131,9 @@ $(function() {
   // Add touch events
   function initTouchListeners() {
     canvas.addEventListener('touchstart', function (evt) {
+      if (menuShow)
+        showHideMenu(false);
+      
       evt.preventDefault();
       var pos = getTouchPos(canvas, evt);
       ctx.beginPath();
