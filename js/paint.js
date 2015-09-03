@@ -71,7 +71,7 @@ $(function() {
     canvas.addEventListener('touchmove', function (evt) {
       if (isDrawing) {
         evt.preventDefault();
-        var pos = getMousePos(canvas, evt);
+        var pos = getTouchPos(canvas, evt);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
       }
