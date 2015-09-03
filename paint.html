@@ -10,39 +10,36 @@
   <script type="text/javascript" src="js/paint.js"></script>
 </head>
 <body>
-  <canvas id="paintCanvas" width="800" height="600"></canvas>
+  <canvas id="paintCanvas" width="1280" height="720"></canvas>
   <nav id='menu'>
     <ul>
-      <li id='size' class='s_green'>Size
+      <li id='size' class='main_menu s_blue left_menu'>
         <ul>
-          <li>5px</li>
-          <li>10px</li>
-          <li>20px</li>
-          <li>40px</li>
+          <li><canvas id='size_0' class='size_canvas'></canvas></li>
+          <li><canvas id='size_1' class='size_canvas'></canvas></li>
+          <li><canvas id='size_2' class='size_canvas'></canvas></li>
+          <li><canvas id='size_3' class='size_canvas'></canvas></li>
         </ul>
+	<div id="size_block" class="white_block"></div>
       </li>
-      </li>
-      <li id='color' class='s_blue'>Color
-        <ul>
-          <li>Black</li>
-          <li>Blue</li>
-          <li>Red</li>
-          <li>Yellow</li>
-        </ul>
-      </li>
-      <li id='zoom' class='s_yellow'>Zoom
-        <ul>
-          <li>Zoom1</li>
-          <li>Zoom2</li>
-          <li>Zoom3</li>
-          <li>Zoom4</li>
-        </ul>
-      </li>
-      <li id='erase' class='s_red'>Erase
+      <li id='erase' class='main_menu s_green right_menu'>
         <ul>
           <li>Eraser</li>
           <li>Clean</li>
         </ul>
+	<div id="erase_block" class="white_block"></div>
+      </li>
+      <li id='zoom' class='main_menu s_red left_menu'>
+        <div id="zoom_block" class="white_block"></div>
+      </li>
+      <li id='color' class='main_menu s_yellow right_menu'>
+        <ul>
+          <li><canvas id='color_0' class='color_canvas'></canvas></li>
+          <li><canvas id='color_1' class='color_canvas'></canvas></li>
+          <li><canvas id='color_2' class='color_canvas'></canvas></li>
+          <li><canvas id='color_3' class='color_canvas'></canvas></li>
+        </ul>
+	<div id="color_block" class="white_block"></div>
       </li>
     </ul>
   </nav>
