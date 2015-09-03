@@ -107,6 +107,7 @@ nav {
   left: 0;
   top: 0;
   margin: 12px;
+  z-index: 2;
 }
 
 #color ul li {
@@ -119,6 +120,7 @@ nav {
   left: 0;
   top: 0;
   margin: 12px;
+  z-index: 2;
 }
 
 #menu li ul li:first-child {
@@ -184,19 +186,3 @@ nav {
   background-size: 40px 40px;
   background-repeat: no-repeat;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
