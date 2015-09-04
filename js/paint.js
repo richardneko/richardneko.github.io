@@ -61,7 +61,7 @@ $(function() {
     ex_ctx.lineCap = 'round';
     ex_ctx.beginPath();
     ex_ctx.moveTo(centerX, centerY);
-    ex_ctx.lineTo(centerX, centerY);
+    ex_ctx.lineTo(centerX, centerY + 0.5);
     ex_ctx.stroke();
   }
 
@@ -153,7 +153,7 @@ $(function() {
     canvas.addEventListener('touchend', function (evt) {
       if (isDrawing) {
         var pos = getTouchPos(canvas, evt);
-        ctx.lineTo(pos.x, pos.y);
+        ctx.lineTo(pos.x, pos.y + 0.5);
         ctx.stroke();
         isDrawing = false;
       }
@@ -184,7 +184,7 @@ $(function() {
     canvas.addEventListener('mouseup', function (evt) {
       if (isDrawing) {
         var pos = getMousePos(canvas, evt);
-        ctx.lineTo(pos.x, pos.y);
+        ctx.lineTo(pos.x, pos.y + 0.5);
         ctx.stroke();
         isDrawing = false;
       }
