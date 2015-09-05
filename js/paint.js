@@ -1,4 +1,5 @@
 $(function() {
+  console.log('init');
   var canvas = document.getElementById('paintCanvas');
   var ctx = canvas.getContext("2d");
   
@@ -11,7 +12,6 @@ $(function() {
   var erases = ['erase', 'reset'];
   var menuChoose = ['#size', '#color', '#zoom', '#erase'];
   
-
   var MENU_NONE = menuChoose.length;
   var MENU_SIZE = 0;
   var MENU_COLOR = 1;
@@ -20,6 +20,8 @@ $(function() {
   var currentMenu = MENU_NONE;
   var currentColor = 0;
   var currentSize = 0;
+
+  var currentScale = 0;
 
   initCanvasSettings();
   initTouchListeners();
@@ -124,6 +126,7 @@ $(function() {
       });
       $("#setting").css("background-color", "black");
       $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
+      menuChoosed(currentMenu, false);
       currentMenu = MENU_NONE;
     }
   }
@@ -270,6 +273,41 @@ $(function() {
     }
   }
 
+  function menuChoosed(i, isChoose) {
+    if (isChoose) {
+      switch (i) {
+        case MENU_SIZE:
+	  $(menuChoose[i]).css("background-color", "#94d7ed");
+	  break;
+	case MENU_COLOR:
+	  $(menuChoose[i]).css("background-color", "#fbdd97");
+	  break;
+	case MENU_ZOOM:
+          $(menuChoose[i]).css("background-color", "#f294b2");
+          break;
+        case MENU_ERASE:
+          $(menuChoose[i]).css("background-color", "#0effbc");
+          break;
+      }
+    } else {
+      switch (i) {
+        case MENU_SIZE:
+          $(menuChoose[i]).css("background-color", "#53bfe2");
+          break;
+        case MENU_COLOR:
+          $(menuChoose[i]).css("background-color", "#f8c54d");
+          break;
+        case MENU_ZOOM:
+          $(menuChoose[i]).css("background-color", "#ea5080");
+          break;
+        case MENU_ERASE:
+          $(menuChoose[i]).css("background-color", "#00c08b");
+          break;
+      }
+
+    }
+  }
+
   function addColorListeners(i) {
     // Default black
     if (currentColor == 0)
@@ -312,19 +350,25 @@ $(function() {
   function addMenuListener(i) {
     $(menuChoose[i]).click(function(e) {
       var target = $(e.target);
-
-      // Avoid white area be clicked
-      if (target.attr('class') != 'white_block') {
+      
+      // Avoid wrong area be clicked
+      if (target.attr('class') != 'white_block' && (target.attr('class') != null && target.attr('class').indexOf('main_menu') != -1)) {
         switch (currentMenu) {
           case MENU_NONE:
 	    currentMenu = i;
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");
+	    menuChoosed(i, true);
 	    break;
 	  case i:
+	    $(menuChoose[i] + ' ul').css("max-height", "0px");
+	    menuChoosed(i, false);
+	    currentMenu = MENU_NONE;
 	    break;
 	  default:
 	    $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
+	    menuChoosed(currentMenu, false);
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");
+	    menuChoosed(i, true);
 	    currentMenu = i;
 	    break;
         }
@@ -332,18 +376,3 @@ $(function() {
     });
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
