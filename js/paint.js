@@ -122,7 +122,7 @@ $(function() {
       $("#menu").css({
         "visibility": "hidden",
 	"opacity": "0",
-	"transition": "visibility 0s linear 0.5s,opacity 0.5s linear"
+	"transition": "visibility 0s linear 0.3s,opacity 0.3s linear"
       });
       $("#setting").css("background-color", "black");
       $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
