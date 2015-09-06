@@ -12,16 +12,21 @@ $(function() {
   var erases = ['erase', 'reset'];
   var menuChoose = ['#size', '#color', '#zoom', '#erase'];
   
+  // Keep full draw points and informations
+  var fullDrawX = new Array();
+  var fullDrawY = new Array();
+  var fullDrawColor = new Array();
+  var fullDrawSize = new Array();
+
   var MENU_NONE = menuChoose.length;
   var MENU_SIZE = 0;
   var MENU_COLOR = 1;
   var MENU_ZOOM = 2;
   var MENU_ERASE = 3;
+  
   var currentMenu = MENU_NONE;
   var currentColor = 0;
   var currentSize = 0;
-
-  var currentScale = 0;
 
   initCanvasSettings();
   initTouchListeners();
@@ -139,6 +144,7 @@ $(function() {
       
       evt.preventDefault();
       var pos = getTouchPos(canvas, evt);
+      drawStart(pos.x, pos.y);
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
       isDrawing = true;
@@ -148,6 +154,7 @@ $(function() {
       if (isDrawing) {
         evt.preventDefault();
         var pos = getTouchPos(canvas, evt);
+	drawContinue(pos.x, pos.y);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
       }
@@ -157,6 +164,7 @@ $(function() {
       if (isDrawing) {
         var pos = getTouchPos(canvas, evt);
         ctx.lineTo(pos.x, pos.y + 0.5);
+	drawContinue(pos.x, pos.y + 0.5);
         ctx.stroke();
         isDrawing = false;
       }
@@ -168,8 +176,9 @@ $(function() {
     canvas.addEventListener('mousedown', function (evt) {
       if (menuShow)
         showHideMenu(false);
-
+    
       var pos = getMousePos(canvas, evt);
+      drawStart(pos.x, pos.y);
       ctx.beginPath();
       ctx.moveTo(pos.x , pos.y);
       evt.preventDefault();
@@ -178,8 +187,9 @@ $(function() {
 
     canvas.addEventListener('mousemove', function (evt) {
       if (isDrawing) {
-        var pos = getMousePos(canvas, evt);
-        ctx.lineTo(pos.x, pos.y);
+	var pos = getMousePos(canvas, evt);
+	drawContinue(pos.x, pos.y);
+	ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
       }
     }, false);
@@ -187,7 +197,8 @@ $(function() {
     canvas.addEventListener('mouseup', function (evt) {
       if (isDrawing) {
         var pos = getMousePos(canvas, evt);
-        ctx.lineTo(pos.x, pos.y + 0.5);
+	drawContinue(pos.x, pos.y + 0.5);
+	ctx.lineTo(pos.x, pos.y + 0.5);
         ctx.stroke();
         isDrawing = false;
       }
@@ -196,6 +207,49 @@ $(function() {
     canvas.addEventListener('mouseleave', function (evt) {
       isDrawing = false;
     }, false);
+  }
+
+  function drawStart(x, y) {
+    fullDrawX.push('d');
+    fullDrawX.push(x);
+    fullDrawY.push('d');
+    fullDrawY.push(y);
+    if (isEraserChoose)
+      fullDrawColor.push('white');
+    else
+      fullDrawColor.push(colors[currentColor - 1]);
+    fullDrawSize.push(currentSize);
+  }
+
+  function drawContinue(x, y) {
+    fullDrawX.push(x);
+    fullDrawY.push(y);
+  }
+
+  // Redraw full images
+  function redraw() {
+    var chooseLen = -1;
+    
+    for (var i = 0; i < fullDrawX.length; i ++) {
+      if (fullDrawX[i] == 'd') {
+	chooseLen = chooseLen + 1;
+	ctx.lineWidth = sizes[fullDrawSize[chooseLen] - 1];
+	ctx.strokeStyle = fullDrawColor[chooseLen];
+	ctx.beginPath();
+	ctx.moveTo(fullDrawX[i + 1], fullDrawY[i + 1]);
+	i = i + 1;
+      } else {
+        ctx.lineTo(fullDrawX[i], fullDrawY[i]);
+	ctx.stroke();
+      }
+    }
+  }
+
+  function clearArray() {
+    fullDrawX = [];
+    fullDrawY = [];
+    fullDrawColor = [];
+    fullDrawSize = [];
   }
 
   function writeMessage(canvas, message) {
@@ -237,7 +291,7 @@ $(function() {
   }
 
   function sizeChoose(i) {
-    ctx.lineWidth = sizes[i];;
+    ctx.lineWidth = sizes[i];
     $("#size ul li:nth-child( " + (i + 1).toString() + ")").css("background-color", "#94d7ed");
     currentSize = (i + 1);
   }
@@ -340,8 +394,10 @@ $(function() {
 
   function addEraseListener(i) {
     $("#erase ul li:nth-child(" + (i + 1).toString() + ")").click(function() {
-      if (i)
+      if (i) {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	clearArray();
+      }
       else
 	eraserChoose();
     });
