@@ -6,6 +6,7 @@ $(function() {
   var isDrawing = false;
   var isEraserChoose = false;
   var menuShow = false;
+  var isZoomMode = false;
   
   var colors = ['black', 'blue', 'red', 'yellow'];
   var sizes = [5, 10, 20, 40];
@@ -131,8 +132,11 @@ $(function() {
       });
       $("#setting").css("background-color", "black");
       $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
-      menuChoosed(currentMenu, false);
-      currentMenu = MENU_NONE;
+      
+      if (!isZoomMode) {
+        menuChoosed(currentMenu, false);
+        currentMenu = MENU_NONE;
+      }
     }
   }
 
@@ -144,6 +148,12 @@ $(function() {
       
       evt.preventDefault();
       var pos = getTouchPos(canvas, evt);
+      
+      if (isZoomMode) {
+        handleZoom(evt);
+	return;
+      }
+
       drawStart(pos.x, pos.y);
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
@@ -151,6 +161,12 @@ $(function() {
     });
 
     canvas.addEventListener('touchmove', function (evt) {
+      if (isZoomMode) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        handleZoom(evt);
+        return;
+      }
+
       if (isDrawing) {
         evt.preventDefault();
         var pos = getTouchPos(canvas, evt);
@@ -161,6 +177,11 @@ $(function() {
     }, false);
 
     canvas.addEventListener('touchend', function (evt) {
+      if (isZoomMode) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
       if (isDrawing) {
         var pos = getTouchPos(canvas, evt);
         ctx.lineTo(pos.x, pos.y + 0.5);
@@ -176,8 +197,9 @@ $(function() {
     canvas.addEventListener('mousedown', function (evt) {
       if (menuShow)
         showHideMenu(false);
-    
+
       var pos = getMousePos(canvas, evt);
+      
       drawStart(pos.x, pos.y);
       ctx.beginPath();
       ctx.moveTo(pos.x , pos.y);
@@ -224,6 +246,29 @@ $(function() {
   function drawContinue(x, y) {
     fullDrawX.push(x);
     fullDrawY.push(y);
+  }
+
+  function drawCircle(x, y, color) {
+    ctx.beginPath();
+    ctx.arc(x, y, 50, 0, 2 * Math.PI, false);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.stroke();  
+  }
+
+  function handleZoom(evt) {
+    var len = evt.targetTouches.length;
+    var rect = canvas.getBoundingClientRect();
+    
+    if (len == 2) {
+      touch = evt.targetTouches[0];
+      drawCircle(touch.pageX - rect.left, touch.pageY - rect.top, "green");
+      touch = evt.targetTouches[1];
+      drawCircle(touch.pageX - rect.left, touch.pageY - rect.top, "red");
+    } else if (len == 1) {
+      touch = evt.targetTouches[0];
+      drawCircle(touch.pageX - rect.left, touch.pageY - rect.top, "green");
+    }
   }
 
   // Redraw full images
@@ -411,16 +456,31 @@ $(function() {
       if (target.attr('class') != 'white_block' && (target.attr('class') != null && target.attr('class').indexOf('main_menu') != -1)) {
         switch (currentMenu) {
           case MENU_NONE:
+	    if (i == MENU_ZOOM) {
+	      isZoomMode = true;
+	      showHideMenu(false);
+	    }
+
 	    currentMenu = i;
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");
 	    menuChoosed(i, true);
 	    break;
 	  case i:
+	    if (i == MENU_ZOOM)
+	      isZoomMode = false;
+	    
 	    $(menuChoose[i] + ' ul').css("max-height", "0px");
 	    menuChoosed(i, false);
 	    currentMenu = MENU_NONE;
 	    break;
 	  default:
+	    if (isZoomMode)
+	      isZoomMode = false;
+	    else if (i == MENU_ZOOM) {
+	      isZoomMode = true;
+	      showHideMenu(false);
+	    }
+	      
 	    $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
 	    menuChoosed(currentMenu, false);
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");
