@@ -18,10 +18,16 @@ canvas {
   text-decoration: none !important;
   font-size: 24px;
   padding: 25px;
+  width: 50px;
+  height: 30px;
   position: fixed;
   bottom: 5px;
   left: 10px;
   z-index: 1;
+  background-image: url(../res/settings.png);
+  background-position: center;
+  background-size: 60px 60px;
+  background-repeat: no-repeat;
 }
 
 /* Menu bar style */
@@ -182,7 +188,7 @@ nav {
 #menu li.s_red{     background-color: #ea5080; color: #aa2a52;}
 #menu li.s_blue{    background-color: #53bfe2; color: #2884a2;}
 #menu li.s_yellow{  background-color: #f8c54d; color: #ab8426;}
-#setting{ background-color: black; color: white;}
+#setting{ background-color: #778899; color: white;}
 
 /* Background images */
 #size {background-image: url(../res/pencil.png);}

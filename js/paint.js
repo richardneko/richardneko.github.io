@@ -122,7 +122,7 @@ $(function() {
 	"opacity": "1",
 	"transition-delay": "0s"
       });
-      $("#setting").css("background-color", "#444");
+      $("#setting").css("background-color", "#dedede");
     } else {
       menuShow = false;
       $("#menu").css({
@@ -130,7 +130,7 @@ $(function() {
 	"opacity": "0",
 	"transition": "visibility 0s linear 0.3s,opacity 0.3s linear"
       });
-      $("#setting").css("background-color", "black");
+      $("#setting").css("background-color", "#778899");
       $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
       
       if (!isZoomMode) {
