@@ -466,19 +466,23 @@ $(function() {
       var target = $(e.target);
       
       // Avoid wrong area be clicked
-      if (target.attr('class') != 'white_block' && (target.attr('class') != null && target.attr('class').indexOf('main_menu') != -1)) {
+      if (target.attr('class') != 'white_block' && 
+         (target.attr('class') != null && target.attr('class').indexOf('main_menu') != -1)) {
         switch (currentMenu) {
           case MENU_NONE:
+	    // show choosed menu
 	    currentMenu = i;
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");
 	    menuChoosed(i, true);
 	    break;
 	  case i:
+	    // close choosed menu
 	    $(menuChoose[i] + ' ul').css("max-height", "0px");
 	    menuChoosed(i, false);
 	    currentMenu = MENU_NONE;
 	    break;
 	  default:
+	    // close current menu and show new menu
 	    $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
 	    menuChoosed(currentMenu, false);
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");
