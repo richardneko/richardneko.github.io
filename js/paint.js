@@ -6,8 +6,8 @@ $(function() {
   var isDrawing = false;
   var isEraserChoose = false;
   var menuShow = false;
-  var isZoomMode = false;
-  
+  var menuCounter = false;
+
   var colors = ['black', 'blue', 'red', 'yellow'];
   var sizes = [5, 10, 20, 40];
   var erases = ['erase', 'reset'];
@@ -28,6 +28,8 @@ $(function() {
   var currentMenu = MENU_NONE;
   var currentColor = 0;
   var currentSize = 0;
+
+  var counterId;
 
   initCanvasSettings();
   initTouchListeners();
@@ -130,13 +132,10 @@ $(function() {
 	"opacity": "0",
 	"transition": "visibility 0s linear 0.3s,opacity 0.3s linear"
       });
-      $("#setting").css("background-color", "#778899");
+      $("#setting").css("background-color", "white");
+      menuChoosed(currentMenu, false);
       $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
-      
-      if (!isZoomMode) {
-        menuChoosed(currentMenu, false);
-        currentMenu = MENU_NONE;
-      }
+      currentMenu = MENU_NONE;
     }
   }
 
@@ -146,14 +145,10 @@ $(function() {
       if (menuShow)
         showHideMenu(false);
       
+      setMenuTimer(true);
+
       evt.preventDefault();
       var pos = getTouchPos(canvas, evt);
-      
-      if (isZoomMode) {
-        handleZoom(evt);
-	return;
-      }
-
       drawStart(pos.x, pos.y);
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
@@ -161,11 +156,8 @@ $(function() {
     });
 
     canvas.addEventListener('touchmove', function (evt) {
-      if (isZoomMode) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        handleZoom(evt);
-        return;
-      }
+      if (menuCounter)
+        setMenuTimer(false);
 
       if (isDrawing) {
         evt.preventDefault();
@@ -177,10 +169,8 @@ $(function() {
     }, false);
 
     canvas.addEventListener('touchend', function (evt) {
-      if (isZoomMode) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        return;
-      }
+      if (menuCounter)
+        setMenuTimer(false);
 
       if (isDrawing) {
         var pos = getTouchPos(canvas, evt);
@@ -198,6 +188,8 @@ $(function() {
       if (menuShow)
         showHideMenu(false);
 
+      setMenuTimer(true);
+
       var pos = getMousePos(canvas, evt);
       
       drawStart(pos.x, pos.y);
@@ -208,6 +200,9 @@ $(function() {
     });
 
     canvas.addEventListener('mousemove', function (evt) {
+      if (menuCounter)
+        setMenuTimer(false);
+
       if (isDrawing) {
 	var pos = getMousePos(canvas, evt);
 	drawContinue(pos.x, pos.y);
@@ -217,6 +212,9 @@ $(function() {
     }, false);
 
     canvas.addEventListener('mouseup', function (evt) {
+      if (menuCounter)
+        setMenuTimer(false);
+
       if (isDrawing) {
         var pos = getMousePos(canvas, evt);
 	drawContinue(pos.x, pos.y + 0.5);
@@ -229,6 +227,19 @@ $(function() {
     canvas.addEventListener('mouseleave', function (evt) {
       isDrawing = false;
     }, false);
+  }
+
+  function setMenuTimer(enable) {
+    if (enable) {
+      menuCounter = true;
+      counterId = setTimeout(function() {
+        isDrawing = false;
+        showHideMenu(true);
+      }, 1000);
+    } else {
+      menuCounter = false;
+      clearTimeout(counterId);
+    }
   }
 
   function drawStart(x, y) {
@@ -248,6 +259,7 @@ $(function() {
     fullDrawY.push(y);
   }
 
+/* keep it for future use
   function drawCircle(x, y, color) {
     ctx.beginPath();
     ctx.arc(x, y, 50, 0, 2 * Math.PI, false);
@@ -270,6 +282,7 @@ $(function() {
       drawCircle(touch.pageX - rect.left, touch.pageY - rect.top, "green");
     }
   }
+*/
 
   // Redraw full images
   function redraw() {
@@ -456,31 +469,16 @@ $(function() {
       if (target.attr('class') != 'white_block' && (target.attr('class') != null && target.attr('class').indexOf('main_menu') != -1)) {
         switch (currentMenu) {
           case MENU_NONE:
-	    if (i == MENU_ZOOM) {
-	      isZoomMode = true;
-	      showHideMenu(false);
-	    }
-
 	    currentMenu = i;
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");
 	    menuChoosed(i, true);
 	    break;
 	  case i:
-	    if (i == MENU_ZOOM)
-	      isZoomMode = false;
-	    
 	    $(menuChoose[i] + ' ul').css("max-height", "0px");
 	    menuChoosed(i, false);
 	    currentMenu = MENU_NONE;
 	    break;
 	  default:
-	    if (isZoomMode)
-	      isZoomMode = false;
-	    else if (i == MENU_ZOOM) {
-	      isZoomMode = true;
-	      showHideMenu(false);
-	    }
-	      
 	    $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
 	    menuChoosed(currentMenu, false);
 	    $(menuChoose[i] + ' ul').css("max-height", "350px");

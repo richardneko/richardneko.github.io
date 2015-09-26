@@ -28,6 +28,9 @@ canvas {
   background-position: center;
   background-size: 60px 60px;
   background-repeat: no-repeat;
+  background-color: white;
+  /* we may need it for the future */
+  display: none;
 }
 
 /* Menu bar style */
@@ -188,7 +191,6 @@ nav {
 #menu li.s_red{     background-color: #ea5080; color: #aa2a52;}
 #menu li.s_blue{    background-color: #53bfe2; color: #2884a2;}
 #menu li.s_yellow{  background-color: #f8c54d; color: #ab8426;}
-#setting{ background-color: #778899; color: white;}
 
 /* Background images */
 #size {background-image: url(../res/pencil.png);}
