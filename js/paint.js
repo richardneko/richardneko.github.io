@@ -16,6 +16,8 @@ $(function() {
   var menuChoose = ['#size', '#color', '#zoom', '#erase', '#keyboard', '#pic', '#back', '#off'];
   var MENU_NONE = menuChoose.length;
 
+  var menuMaxHeight = 350;
+
   // Keep full draw points and informations
   var fullDrawX = new Array();
   var fullDrawY = new Array();
@@ -85,7 +87,7 @@ $(function() {
     var _canvas = document.getElementById('color_' + i.toString());
     var _ctx = _canvas.getContext("2d");
 
-    drawExample(_canvas, _ctx, sizes[3], colors[i]);
+    drawExample(_canvas, _ctx, sizes[(sizes.length - 1)], colors[i]);
   }
 
   // Eraser menu listener
@@ -95,8 +97,37 @@ $(function() {
     }
   }
 
+  function appendNewColorAndSize() {
+    var colorLen = colors.length;
+    var sizeLen = sizes.length;
+    
+    for (var i = 0; i < moreColors.length; i ++) {
+      $("#color ul").append('<li><canvas id=\'color_' + colorLen + '\' class=\'color_canvas\'></canvas></li>');
+      colorLen ++;
+    }
+    colors = colors.concat(moreColors);
+
+    for (var i = 0; i < moreSizes.length; i ++) {
+      $("#size ul").append('<li><canvas id=\'size_' + sizeLen + '\' class=\'size_canvas\'></canvas></li>');
+      sizeLen ++;
+    }
+    sizes = sizes.concat(moreSizes);
+    sizes.sort(function(a, b) {
+      return (a - b);
+    })
+
+    if (sizes.length + moreSizes.length > colors.length + moreColors.length)
+      menuMaxHeight = menuMaxHeight + 60 * (moreSizes.length);
+    else
+      menuMaxHeight = menuMaxHeight + 60 * (moreColors.length);
+  }
+
   // Menu settings
   function initMenuSettings() {
+    if (moreColors.length > 0 || moreSizes.length > 0) {
+      appendNewColorAndSize();
+    }
+    
     // Show or hide menu
     $("#setting").click(function() {
       if (!menuShow)
@@ -482,7 +513,7 @@ $(function() {
           case MENU_NONE:
 	    // show choosed menu
 	    currentMenu = i;
-	    $(menuChoose[i] + ' ul').css("max-height", "350px");
+	    $(menuChoose[i] + ' ul').css("max-height", menuMaxHeight + "px");
 	    menuChoosed(i, true);
 	    break;
 	  case i:
@@ -495,7 +526,7 @@ $(function() {
 	    // close current menu and show new menu
 	    $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
 	    menuChoosed(currentMenu, false);
-	    $(menuChoose[i] + ' ul').css("max-height", "350px");
+	    $(menuChoose[i] + ' ul').css("max-height", menuMaxHeight + "px");
 	    menuChoosed(i, true);
 	    currentMenu = i;
 	    break;
