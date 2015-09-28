@@ -9,26 +9,19 @@ $(function() {
   var menuCounter = false;
 
   var colors = ['black', 'blue', 'red', 'yellow'];
+  var moreColors = [];
   var sizes = [5, 10, 20, 40];
+  var moreSizes = [];
   var erases = ['erase', 'reset'];
   var menuChoose = ['#size', '#color', '#zoom', '#erase', '#keyboard', '#pic', '#back', '#off'];
-  
+  var MENU_NONE = menuChoose.length;
+
   // Keep full draw points and informations
   var fullDrawX = new Array();
   var fullDrawY = new Array();
   var fullDrawColor = new Array();
   var fullDrawSize = new Array();
 
-  var MENU_NONE = menuChoose.length;
-  var MENU_SIZE = 0;
-  var MENU_COLOR = 1;
-  var MENU_ZOOM = 2;
-  var MENU_ERASE = 3;
-  var MENU_KEY = 4;
-  var MENU_PIC = 5;
-  var MENU_BACK = 6;
-  var MENU_OFF = 7;
-  
   var openMenu = '#menu';
   var currentMenu = MENU_NONE;
   var currentColor = 0;
@@ -392,45 +385,35 @@ $(function() {
   }
 
   function menuChoosed(i, isChoose) {
-    if (isChoose) {
-      switch (i) {
-        case MENU_SIZE:
-	case MENU_KEY:
-	  $(menuChoose[i]).css("background-color", "#94d7ed");
-	  break;
-	case MENU_COLOR:
-	case MENU_OFF:
-	  $(menuChoose[i]).css("background-color", "#fbdd97");
-	  break;
-	case MENU_ZOOM:
-	case MENU_BACK:
-          $(menuChoose[i]).css("background-color", "#f294b2");
-          break;
-        case MENU_ERASE:
-	case MENU_PIC:
-          $(menuChoose[i]).css("background-color", "#0effbc");
-          break;
-      }
-    } else {
-      switch (i) {
-        case MENU_SIZE:
-	case MENU_KEY:
+    switch (menuChoose[i]) {
+      case '#size':
+      case '#keyboard':
+        if (isChoose)
+          $(menuChoose[i]).css("background-color", "#94d7ed");
+        else
           $(menuChoose[i]).css("background-color", "#53bfe2");
-          break;
-        case MENU_COLOR:
-	case MENU_OFF:
+        break;
+      case '#color':
+      case '#off':
+        if (isChoose)
+          $(menuChoose[i]).css("background-color", "#fbdd97");
+        else
           $(menuChoose[i]).css("background-color", "#f8c54d");
-          break;
-        case MENU_ZOOM: 
-	case MENU_BACK:
+        break;
+      case '#zoom':
+      case '#back':
+        if (isChoose)
+          $(menuChoose[i]).css("background-color", "#f294b2");
+        else
           $(menuChoose[i]).css("background-color", "#ea5080");
-          break;
-        case MENU_ERASE:
-	case MENU_PIC:
+        break;
+      case '#erase':
+      case '#pic':
+        if (isChoose)
+          $(menuChoose[i]).css("background-color", "#0effbc");
+        else
           $(menuChoose[i]).css("background-color", "#00c08b");
-          break;
-      }
-
+        break;
     }
   }
 
@@ -483,12 +466,12 @@ $(function() {
       if (target.attr('class') != 'white_block' && 
          (target.attr('class') != null && target.attr('class').indexOf('main_menu') != -1)) {
 
-	if (i == MENU_ZOOM) {
+	if (menuChoose[i] == '#zoom') {
 	  showHideMenu('#menu', false);
 	  openMenu = '#menu2';
 	  showHideMenu(openMenu, true);
 	  return;
-	} else if (i == MENU_BACK) {
+	} else if (menuChoose[i] == '#back') {
           showHideMenu('#menu2', false);
           openMenu = '#menu';
           showHideMenu(openMenu, true);
