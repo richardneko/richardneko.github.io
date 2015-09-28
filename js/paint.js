@@ -11,7 +11,7 @@ $(function() {
   var colors = ['black', 'blue', 'red', 'yellow'];
   var sizes = [5, 10, 20, 40];
   var erases = ['erase', 'reset'];
-  var menuChoose = ['#size', '#color', '#zoom', '#erase'];
+  var menuChoose = ['#size', '#color', '#zoom', '#erase', '#keyboard', '#pic', '#back', '#off'];
   
   // Keep full draw points and informations
   var fullDrawX = new Array();
@@ -24,7 +24,12 @@ $(function() {
   var MENU_COLOR = 1;
   var MENU_ZOOM = 2;
   var MENU_ERASE = 3;
+  var MENU_KEY = 4;
+  var MENU_PIC = 5;
+  var MENU_BACK = 6;
+  var MENU_OFF = 7;
   
+  var openMenu = '#menu';
   var currentMenu = MENU_NONE;
   var currentColor = 0;
   var currentSize = 0;
@@ -32,9 +37,9 @@ $(function() {
   var counterId;
 
   initCanvasSettings();
+  initMenuSettings();
   initTouchListeners();
   initMouseListeners();
-  initMenuSettings();
 
   function initCanvasSettings() {
     // Make canvas full page
@@ -102,9 +107,9 @@ $(function() {
     // Show or hide menu
     $("#setting").click(function() {
       if (!menuShow)
-        showHideMenu(true);
+        showHideMenu('#menu' ,true);
       else
-        showHideMenu(false);
+        showHideMenu(openMenu, false);
     });
 
     for (var i = 0; i < menuChoose.length; i ++)
@@ -116,10 +121,10 @@ $(function() {
   }
   
   // Menu show, hide
-  function showHideMenu(enable) {
+  function showHideMenu(menu, enable) {
     if (enable) {
       menuShow = true;
-      $("#menu").css({
+      $(menu).css({
         "visibility": "visible",
 	"opacity": "1",
 	"transition-delay": "0s"
@@ -127,7 +132,7 @@ $(function() {
       $("#setting").css("background-color", "#dedede");
     } else {
       menuShow = false;
-      $("#menu").css({
+      $(menu).css({
         "visibility": "hidden",
 	"opacity": "0",
 	"transition": "visibility 0s linear 0.3s,opacity 0.3s linear"
@@ -143,7 +148,7 @@ $(function() {
   function initTouchListeners() {
     canvas.addEventListener('touchstart', function (evt) {
       if (menuShow)
-        showHideMenu(false);
+        showHideMenu(openMenu, false);
       
       setMenuTimer(true);
 
@@ -186,7 +191,7 @@ $(function() {
   function initMouseListeners() {
     canvas.addEventListener('mousedown', function (evt) {
       if (menuShow)
-        showHideMenu(false);
+        showHideMenu(openMenu, false);
 
       setMenuTimer(true);
 
@@ -234,7 +239,8 @@ $(function() {
       menuCounter = true;
       counterId = setTimeout(function() {
         isDrawing = false;
-        showHideMenu(true);
+	openMenu = '#menu';
+        showHideMenu('#menu' ,true);
       }, 1000);
     } else {
       menuCounter = false;
@@ -389,30 +395,38 @@ $(function() {
     if (isChoose) {
       switch (i) {
         case MENU_SIZE:
+	case MENU_KEY:
 	  $(menuChoose[i]).css("background-color", "#94d7ed");
 	  break;
 	case MENU_COLOR:
+	case MENU_OFF:
 	  $(menuChoose[i]).css("background-color", "#fbdd97");
 	  break;
 	case MENU_ZOOM:
+	case MENU_BACK:
           $(menuChoose[i]).css("background-color", "#f294b2");
           break;
         case MENU_ERASE:
+	case MENU_PIC:
           $(menuChoose[i]).css("background-color", "#0effbc");
           break;
       }
     } else {
       switch (i) {
         case MENU_SIZE:
+	case MENU_KEY:
           $(menuChoose[i]).css("background-color", "#53bfe2");
           break;
         case MENU_COLOR:
+	case MENU_OFF:
           $(menuChoose[i]).css("background-color", "#f8c54d");
           break;
-        case MENU_ZOOM:
+        case MENU_ZOOM: 
+	case MENU_BACK:
           $(menuChoose[i]).css("background-color", "#ea5080");
           break;
         case MENU_ERASE:
+	case MENU_PIC:
           $(menuChoose[i]).css("background-color", "#00c08b");
           break;
       }
@@ -468,7 +482,20 @@ $(function() {
       // Avoid wrong area be clicked
       if (target.attr('class') != 'white_block' && 
          (target.attr('class') != null && target.attr('class').indexOf('main_menu') != -1)) {
-        switch (currentMenu) {
+
+	if (i == MENU_ZOOM) {
+	  showHideMenu('#menu', false);
+	  openMenu = '#menu2';
+	  showHideMenu(openMenu, true);
+	  return;
+	} else if (i == MENU_BACK) {
+          showHideMenu('#menu2', false);
+          openMenu = '#menu';
+          showHideMenu(openMenu, true);
+          return;	
+	}
+
+	switch (currentMenu) {
           case MENU_NONE:
 	    // show choosed menu
 	    currentMenu = i;
