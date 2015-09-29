@@ -1,17 +1,28 @@
 $(function() {
-  console.log('init');
   var canvas = document.getElementById('paintCanvas');
   var ctx = canvas.getContext("2d");
   
+  var modes = {
+    DRAW: 1,
+    ERASE: 2,
+    PICTURE: 3,
+    KEYBOARD: 4,
+  };
+  currentMode = modes.DRAW;
+
   var isDrawing = false;
-  var isEraserChoose = false;
   var menuShow = false;
   var menuCounter = false;
 
   var colors = ['black', 'blue', 'red', 'yellow'];
-  var moreColors = [];
   var sizes = [5, 10, 20, 40];
+
+  /* add here if need more colors */
+  var moreColors = [];
+  
+  /* add here if need more sizes */
   var moreSizes = [];
+
   var erases = ['erase', 'reset'];
   var menuChoose = ['#size', '#color', '#zoom', '#erase', '#keyboard', '#pic', '#back', '#off'];
   var MENU_NONE = menuChoose.length;
@@ -171,29 +182,46 @@ $(function() {
   // Add touch events
   function initTouchListeners() {
     canvas.addEventListener('touchstart', function (evt) {
-      if (menuShow)
+      if (menuShow) {
         showHideMenu(openMenu, false);
+	return;
+      }
       
       setMenuTimer(true);
 
       evt.preventDefault();
-      var pos = getTouchPos(canvas, evt);
-      drawStart(pos.x, pos.y);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      isDrawing = true;
+      switch (currentMode) {
+        case modes.DRAW:
+        case modes.ERASE:      
+          var pos = getTouchPos(canvas, evt);
+          drawStart(pos.x, pos.y);
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          isDrawing = true;
+	  break;
+	default:
+	  console.log('touchdown default!');
+      }
     });
 
     canvas.addEventListener('touchmove', function (evt) {
       if (menuCounter)
         setMenuTimer(false);
 
-      if (isDrawing) {
-        evt.preventDefault();
-        var pos = getTouchPos(canvas, evt);
-	drawContinue(pos.x, pos.y);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
+      evt.preventDefault();
+      switch (currentMode) {
+        case modes.DRAW:
+        case modes.ERASE:
+          if (isDrawing) {
+            evt.preventDefault();
+            var pos = getTouchPos(canvas, evt);
+	    drawContinue(pos.x, pos.y);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+          }
+	  break;
+	default:
+	  console.log('touchmove default!');
       }
     }, false);
 
@@ -201,12 +229,19 @@ $(function() {
       if (menuCounter)
         setMenuTimer(false);
 
-      if (isDrawing) {
-        var pos = getTouchPos(canvas, evt);
-        ctx.lineTo(pos.x, pos.y + 0.5);
-	drawContinue(pos.x, pos.y + 0.5);
-        ctx.stroke();
-        isDrawing = false;
+      switch (currentMode) {
+        case modes.DRAW:
+        case modes.ERASE:
+          if (isDrawing) {
+            var pos = getTouchPos(canvas, evt);
+            ctx.lineTo(pos.x, pos.y + 0.5);
+	    drawContinue(pos.x, pos.y + 0.5);
+            ctx.stroke();
+            isDrawing = false;
+	  }
+	  break;
+	default:
+	  console.log('touchend default!');
       }
     }, false);
   }
@@ -214,29 +249,46 @@ $(function() {
   // Add mouse events
   function initMouseListeners() {
     canvas.addEventListener('mousedown', function (evt) {
-      if (menuShow)
+      if (menuShow) {
         showHideMenu(openMenu, false);
+	return;
+      }
 
       setMenuTimer(true);
-
-      var pos = getMousePos(canvas, evt);
-      
-      drawStart(pos.x, pos.y);
-      ctx.beginPath();
-      ctx.moveTo(pos.x , pos.y);
       evt.preventDefault();
-      isDrawing = true;
+
+      switch (currentMode) {
+        case modes.DRAW:
+	case modes.ERASE:
+	  var pos = getMousePos(canvas, evt);
+      
+          drawStart(pos.x, pos.y);
+          ctx.beginPath();
+          ctx.moveTo(pos.x , pos.y);
+          evt.preventDefault();
+          isDrawing = true;
+	  break;
+	default:
+	  console.log('mousedown default!');
+      }
     });
 
     canvas.addEventListener('mousemove', function (evt) {
       if (menuCounter)
         setMenuTimer(false);
 
-      if (isDrawing) {
-	var pos = getMousePos(canvas, evt);
-	drawContinue(pos.x, pos.y);
-	ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
+      switch (currentMode) {
+        case modes.DRAW:
+        case modes.ERASE:
+          if (isDrawing) {
+	    var pos = getMousePos(canvas, evt);
+	    drawContinue(pos.x, pos.y);
+	    ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+          }
+	  break;
+	default:
+	  console.log('mousemove default!');
       }
     }, false);
 
@@ -244,17 +296,31 @@ $(function() {
       if (menuCounter)
         setMenuTimer(false);
 
-      if (isDrawing) {
-        var pos = getMousePos(canvas, evt);
-	drawContinue(pos.x, pos.y + 0.5);
-	ctx.lineTo(pos.x, pos.y + 0.5);
-        ctx.stroke();
-        isDrawing = false;
+      switch (currentMode) {
+        case modes.DRAW:
+        case modes.ERASE:
+          if (isDrawing) {
+            var pos = getMousePos(canvas, evt);
+	    drawContinue(pos.x, pos.y + 0.5);
+	    ctx.lineTo(pos.x, pos.y + 0.5);
+            ctx.stroke();
+            isDrawing = false;
+          }
+	  break;
+	default:
+	  console.log('mouseup default!');
       }
     }, false);
   
     canvas.addEventListener('mouseleave', function (evt) {
-      isDrawing = false;
+      switch (currentMode) {
+        case modes.DRAW:
+        case modes.ERASE:
+          isDrawing = false;
+	  break;
+	default:
+	  console.log('mouseleave default!');
+      }
     }, false);
   }
 
@@ -277,9 +343,9 @@ $(function() {
     fullDrawX.push(x);
     fullDrawY.push('d');
     fullDrawY.push(y);
-    if (isEraserChoose)
+    if (currentMode == modes.ERASE)
       fullDrawColor.push('white');
-    else
+    else if (currentMode == modes.Draw)
       fullDrawColor.push(colors[currentColor - 1]);
     fullDrawSize.push(currentSize);
   }
@@ -368,11 +434,11 @@ $(function() {
 
   function colorChoose(i) {
     // May be eraser choose
-    if (isEraserChoose) {
+    if (currentMode == modes.ERASE) {
       toDefaultColor('#erase', 1);
-      isEraserChoose = false;
     }
-    
+    currentMode = modes.DRAW;
+
     ctx.strokeStyle = colors[i];
     $("#color ul li:nth-child( " + (i + 1).toString() + ")").css("background-color", "#fbdd97");
     currentColor = (i + 1);
@@ -385,12 +451,11 @@ $(function() {
   }
 
   function eraserChoose() {
-    if (currentColor) {
+    if (currentMode == modes.DRAW) {
       toDefaultColor('#color', currentColor);
       currentColor = 0;
     }
-
-    isEraserChoose = true;
+    currentMode = modes.ERASE;
     ctx.strokeStyle = 'white';
     $("#erase ul li:nth-child(1)").css("background-color", "#0effbc");
   }
