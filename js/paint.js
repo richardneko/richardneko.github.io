@@ -162,7 +162,8 @@ $(function() {
       $(menu).css({
         "visibility": "visible",
 	"opacity": "1",
-	"transition-delay": "0s"
+	"transition-delay": "0s",
+	"z-index": "1"
       });
       $("#setting").css("background-color", "#dedede");
     } else {
@@ -170,7 +171,8 @@ $(function() {
       $(menu).css({
         "visibility": "hidden",
 	"opacity": "0",
-	"transition": "visibility 0s linear 0.3s,opacity 0.3s linear"
+	"transition": "visibility 0s linear 0.3s,opacity 0.3s linear",
+	"z-index": "0"
       });
       $("#setting").css("background-color", "white");
       menuChoosed(currentMenu, false);
