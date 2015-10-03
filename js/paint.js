@@ -1,7 +1,8 @@
 $(function() {
   var canvas = document.getElementById('paintCanvas');
   var ctx = canvas.getContext("2d");
-  
+  var fileloader = document.getElementById('fileUpload');
+
   var modes = {
     DRAW: 1,
     ERASE: 2,
@@ -44,6 +45,7 @@ $(function() {
   var counterId;
 
   initCanvasSettings();
+  initImageLoader();
   initMenuSettings();
   initTouchListeners();
   initMouseListeners();
@@ -57,6 +59,20 @@ $(function() {
     ctx.lineCap = 'round';
   }
   
+  function initImageLoader() {
+    fileloader.addEventListener('change', function(e) {
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        var img = new Image();
+	img.onload = function() {
+	  ctx.drawImage(img,0,0, img.width / 2, img.height / 2);
+	}
+	img.src = evt.target.result;
+      }
+      reader.readAsDataURL(e.target.files[0]);
+    }, false);
+  }
+
   // Size menu listener
   function initSizeListener() {
     for (var i = 0; i < sizes.length; i ++) {
