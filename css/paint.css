@@ -7,6 +7,13 @@ canvas {
   position: absolute;
 }
 
+input {
+  display: block;
+  visibility: hidden;
+  width: 0;
+  height: 0;
+}
+
 /* Setting button style */
 #setting {
   list-style: none;
@@ -30,7 +37,7 @@ canvas {
   background-repeat: no-repeat;
   background-color: white;
   /* we may need it for the future */
-  display: none;
+  !display: none;
 }
 
 /* Menu bar style */

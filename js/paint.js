@@ -9,6 +9,7 @@ $(function() {
     KEYBOARD: 4,
   };
   currentMode = modes.DRAW;
+  var previousMode;
 
   var isDrawing = false;
   var menuShow = false;
@@ -178,6 +179,7 @@ $(function() {
       menuChoosed(currentMenu, false);
       $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
       currentMenu = MENU_NONE;
+      openMenu = '#menu';
     }
   }
 
@@ -202,7 +204,7 @@ $(function() {
           isDrawing = true;
 	  break;
 	default:
-	  console.log('touchdown default!');
+	  //console.log('touchdown default!');
       }
     });
 
@@ -223,7 +225,7 @@ $(function() {
           }
 	  break;
 	default:
-	  console.log('touchmove default!');
+	  //console.log('touchmove default!');
       }
     }, false);
 
@@ -243,7 +245,7 @@ $(function() {
 	  }
 	  break;
 	default:
-	  console.log('touchend default!');
+	  //console.log('touchend default!');
       }
     }, false);
   }
@@ -271,7 +273,7 @@ $(function() {
           isDrawing = true;
 	  break;
 	default:
-	  console.log('mousedown default!');
+	  //console.log('mousedown default!');
       }
     });
 
@@ -290,7 +292,7 @@ $(function() {
           }
 	  break;
 	default:
-	  console.log('mousemove default!');
+	  //console.log('mousemove default!');
       }
     }, false);
 
@@ -309,8 +311,11 @@ $(function() {
             isDrawing = false;
           }
 	  break;
+	case modes.PICTURE:
+	  handlePictureInput(evt);
 	default:
-	  console.log('mouseup default!');
+	  //$('input').click();
+	  //console.log('mouseup default!');
       }
     }, false);
   
@@ -321,9 +326,13 @@ $(function() {
           isDrawing = false;
 	  break;
 	default:
-	  console.log('mouseleave default!');
+	  //console.log('mouseleave default!');
       }
     }, false);
+  }
+
+  function handlePictureInput(evt) {
+    $('input').click();
   }
 
   function setMenuTimer(enable) {
@@ -438,8 +447,13 @@ $(function() {
     // May be eraser choose
     if (currentMode == modes.ERASE) {
       toDefaultColor('#erase', 1);
+      currentMode = modes.DRAW;
+    } else if (currentMode == modes.PICTURE || currentMode == modes.KEYBOARD) {
+      if (previousMode == modes.ERASE) {
+        previousMode = modes.DRAW;
+	toDefaultColor('#erase', 1);
+      }
     }
-    currentMode = modes.DRAW;
 
     ctx.strokeStyle = colors[i];
     $("#color ul li:nth-child( " + (i + 1).toString() + ")").css("background-color", "#fbdd97");
@@ -456,8 +470,14 @@ $(function() {
     if (currentMode == modes.DRAW) {
       toDefaultColor('#color', currentColor);
       currentColor = 0;
+      currentMode = modes.ERASE;
+    } else if (currentMode == modes.PICTURE || currentMode == modes.KEYBOARD) {
+      if (previousMode == modes.DRAW) {
+        previousMode = modes.ERASE;
+	toDefaultColor('#color', currentColor);
+      }
     }
-    currentMode = modes.ERASE;
+    
     ctx.strokeStyle = 'white';
     $("#erase ul li:nth-child(1)").css("background-color", "#0effbc");
   }
@@ -573,7 +593,39 @@ $(function() {
           showHideMenu('#menu2', false);
           openMenu = '#menu';
           showHideMenu(openMenu, true);
-          return;	
+          return;
+	} else if (menuChoose[i] == '#pic') {
+	  if (currentMode == modes.PICTURE) {
+	    currentMode = previousMode;
+	    menuChoosed(i, false);
+	  } else if (currentMode == modes.KEYBOARD) {
+	    currentMode = modes.PICTURE;
+	    menuChoosed(i, true);
+	    menuChoosed(4, false);
+	    showHideMenu(openMenu, false);
+	  } else {
+	    previousMode = currentMode;
+	    currentMode = modes.PICTURE;
+	    menuChoosed(i, true);
+	    showHideMenu(openMenu, false);
+	  }
+	  return;
+	} else if (menuChoose[i] == '#keyboard') {
+	  if (currentMode == modes.KEYBOARD) {
+	    currentMode = previousMode;
+	    menuChoosed(i, false);
+	  } else if (currentMode == modes.PICTURE) {
+	    currentMode = modes.KEYBOARD;
+	    menuChoosed(i, true);
+	    menuChoosed(5, false);
+	    showHideMenu(openMenu, false);
+	  } else {
+	    previousMode = currentMode;
+	    currentMode = modes.KEYBOARD;
+	    menuChoosed(i, true);
+	    showHideMenu(openMenu, false);
+	  }
+	  return;
 	}
 
 	switch (currentMenu) {
