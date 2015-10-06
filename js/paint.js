@@ -44,6 +44,13 @@ $(function() {
 
   var counterId;
 
+  // Image information
+  var imageCount = 0;
+  var img = new Array();
+  var imageWidth = new Array();
+  var imageHeight = new Array();
+  var imagePos = new Array();
+
   initCanvasSettings();
   initImageLoader();
   initMenuSettings();
@@ -63,11 +70,15 @@ $(function() {
     fileloader.addEventListener('change', function(e) {
       var reader = new FileReader();
       reader.onload = function(evt) {
-        var img = new Image();
-	img.onload = function() {
-	  ctx.drawImage(img,0,0, img.width / 2, img.height / 2);
+        img[imageCount] = new Image();
+	img[imageCount].onload = function() {
+	  imageWidth[imageCount] = img[imageCount].width;
+	  imageHeight[imageCount] = img[imageCount].height;
+	  ctx.drawImage(img[imageCount], 0, 0, img[imageCount].width, img[imageCount].height, 
+	  		imagePos[imageCount].x, imagePos[imageCount].y, imageWidth[imageCount], imageHeight[imageCount]);
+	  imageCount ++;
 	}
-	img.src = evt.target.result;
+	img[imageCount].src = evt.target.result;
       }
       reader.readAsDataURL(e.target.files[0]);
     }, false);
@@ -348,6 +359,7 @@ $(function() {
   }
 
   function handlePictureInput(evt) {
+    imagePos[imageCount] = getMousePos(canvas, evt);
     $('input').click();
   }
 
