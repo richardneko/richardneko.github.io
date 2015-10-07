@@ -46,6 +46,7 @@ $(function() {
 
   // Image information
   var imageCount = 0;
+  var currentChooseImage = 0;
   var img = new Array();
   var imageWidth = new Array();
   var imageHeight = new Array();
@@ -72,10 +73,12 @@ $(function() {
       reader.onload = function(evt) {
         img[imageCount] = new Image();
 	img[imageCount].onload = function() {
-	  imageWidth[imageCount] = img[imageCount].width;
-	  imageHeight[imageCount] = img[imageCount].height;
+	  imageWidth[imageCount] = img[imageCount].width / 2;
+	  imageHeight[imageCount] = img[imageCount].height / 2;
 	  ctx.drawImage(img[imageCount], 0, 0, img[imageCount].width, img[imageCount].height, 
 	  		imagePos[imageCount].x, imagePos[imageCount].y, imageWidth[imageCount], imageHeight[imageCount]);
+	  drawImageAnchorEdge(imageCount);
+	  currentChooseImage = imageCount;
 	  imageCount ++;
 	}
 	img[imageCount].src = evt.target.result;
@@ -84,6 +87,41 @@ $(function() {
     }, false);
   }
 
+  function drawAnchor(x, y) {
+    ctx.save();
+    ctx.fillStyle = 'black';
+    ctx.fillRect(x, y, 16, 16);
+    ctx.restore();
+  }
+  
+  function drawImageAnchorEdge(imageNum) {
+    var anchorSize = 16;
+    // top left, top middle, top right
+    drawAnchor(imagePos[imageNum].x - anchorSize / 2, imagePos[imageNum].y - anchorSize / 2);
+    drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] / 2 - anchorSize / 2, imagePos[imageNum].y - anchorSize / 2);
+    drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] - anchorSize / 2, imagePos[imageNum].y - anchorSize / 2);
+    // middle left, middle right
+    drawAnchor(imagePos[imageNum].x - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] / 2 - anchorSize / 2);
+    drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] / 2 - anchorSize / 2);
+    // bottom left, bottom middle, bottom right
+    drawAnchor(imagePos[imageNum].x - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] - anchorSize / 2);
+    drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] / 2 - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] - anchorSize / 2);
+    drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] - anchorSize / 2);
+
+    // draw edge
+    ctx.save();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'black';
+    ctx.beginPath();
+    ctx.moveTo(imagePos[imageNum].x, imagePos[imageNum].y);
+    ctx.lineTo(imagePos[imageNum].x + imageWidth[imageNum], imagePos[imageNum].y);
+    ctx.lineTo(imagePos[imageNum].x + imageWidth[imageNum], imagePos[imageNum].y + imageHeight[imageNum]);
+    ctx.lineTo(imagePos[imageNum].x, imagePos[imageNum].y + imageHeight[imageNum]);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+  
   // Size menu listener
   function initSizeListener() {
     for (var i = 0; i < sizes.length; i ++) {
