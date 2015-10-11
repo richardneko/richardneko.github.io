@@ -46,7 +46,10 @@ $(function() {
 
   // Image information
   var imageCount = 0;
-  var currentChooseImage = 0;
+  var currentChooseImage = -1;
+  var anchorSize = 16;
+  var isResizeChoose = 0;
+  var isPictureChoose = false;
   var img = new Array();
   var imageWidth = new Array();
   var imageHeight = new Array();
@@ -90,12 +93,11 @@ $(function() {
   function drawAnchor(x, y) {
     ctx.save();
     ctx.fillStyle = 'black';
-    ctx.fillRect(x, y, 16, 16);
+    ctx.fillRect(x, y, anchorSize, anchorSize);
     ctx.restore();
   }
   
   function drawImageAnchorEdge(imageNum) {
-    var anchorSize = 16;
     // top left, top middle, top right
     drawAnchor(imagePos[imageNum].x - anchorSize / 2, imagePos[imageNum].y - anchorSize / 2);
     drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] / 2 - anchorSize / 2, imagePos[imageNum].y - anchorSize / 2);
@@ -122,6 +124,17 @@ $(function() {
     ctx.restore();
   }
   
+  function clearImageInfo() {
+    imageCount = 0;
+    currentChooseImage = -1;
+    isResizeChoose = 0;
+    isPictureChoose = false;
+    img = [];
+    imageWidth = [];
+    imageHeight = [];
+    imagePos = [];
+  }
+
   // Size menu listener
   function initSizeListener() {
     for (var i = 0; i < sizes.length; i ++) {
@@ -248,6 +261,68 @@ $(function() {
     }
   }
 
+  /* 012 */
+  /* 3 4 */
+  /* 567 */
+  function resizeClicked(x, y) {
+    if (currentChooseImage < 0) {
+      return 0;
+    }
+
+    // 123
+    if (y < imagePos[currentChooseImage].y + anchorSize / 2 && 
+        y > imagePos[currentChooseImage].y - anchorSize / 2) {
+      if (x < imagePos[currentChooseImage].x + anchorSize / 2 && 
+          x > imagePos[currentChooseImage].x - anchorSize / 2) {
+        console.log('1 clicked');
+	return 1;
+      } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 + anchorSize / 2 && 
+                 x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 - anchorSize / 2) {
+        console.log('2 clicked');
+	return 2;
+      } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] + anchorSize / 2 &&
+                 x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - anchorSize / 2) {
+        console.log('3 clicked');
+	return 3;
+      }
+    } 
+    // 45
+    else if (y < imagePos[currentChooseImage].y + imageHeight[currentChooseImage] / 2 + anchorSize / 2 &&
+             y > imagePos[currentChooseImage].y + imageHeight[currentChooseImage] / 2 - anchorSize / 2) {
+      if (x < imagePos[currentChooseImage].x + anchorSize / 2 &&
+          x > imagePos[currentChooseImage].x - anchorSize / 2) {
+        console.log('4 clicked');
+	return 4;
+      } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] + anchorSize / 2 &&
+                 x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - anchorSize / 2) {
+        console.log('5 clicked');
+	return 5;
+      }
+    }
+    // 678
+    else if (y < imagePos[currentChooseImage].y + imageHeight[currentChooseImage] + anchorSize / 2 &&
+             y > imagePos[currentChooseImage].y + imageHeight[currentChooseImage] - anchorSize / 2) {
+      if (x < imagePos[currentChooseImage].x + anchorSize / 2 &&
+          x > imagePos[currentChooseImage].x - anchorSize / 2) {
+	console.log('6 clicked');
+	return 6;
+      } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 + anchorSize / 2 &&
+                 x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 - anchorSize / 2) {
+        console.log('7 clicked');
+	return 7;
+      } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] + anchorSize / 2 &&
+                 x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - anchorSize / 2) {
+        console.log('8 clicked');
+	return 8;
+      }
+    } else
+      return 0;
+  }
+
+  function pictureClicked(x, y) {
+    return false;
+  }
+
   // Add touch events
   function initTouchListeners() {
     canvas.addEventListener('touchstart', function (evt) {
@@ -322,21 +397,26 @@ $(function() {
         showHideMenu(openMenu, false);
 	return;
       }
-
       setMenuTimer(true);
       evt.preventDefault();
 
+      var pos = getMousePos(canvas, evt);
       switch (currentMode) {
         case modes.DRAW:
 	case modes.ERASE:
-	  var pos = getMousePos(canvas, evt);
-      
           drawStart(pos.x, pos.y);
           ctx.beginPath();
           ctx.moveTo(pos.x , pos.y);
           evt.preventDefault();
           isDrawing = true;
 	  break;
+	case modes.PICTURE:
+	  var ret;
+	  if ((ret = resizeClicked(pos.x, pos.y)) > 0) {
+	    isResizeChoose = ret;
+	  } else if (pictureClicked(pos.x, pos.y)) {
+	    isPictureChoose = true;
+	  }
 	default:
 	  //console.log('mousedown default!');
       }
@@ -346,16 +426,20 @@ $(function() {
       if (menuCounter)
         setMenuTimer(false);
 
+      var pos = getMousePos(canvas, evt);
       switch (currentMode) {
         case modes.DRAW:
         case modes.ERASE:
           if (isDrawing) {
-	    var pos = getMousePos(canvas, evt);
 	    drawContinue(pos.x, pos.y);
 	    ctx.lineTo(pos.x, pos.y);
             ctx.stroke();
           }
 	  break;
+	case modes.PICTURE:
+	  if (isResizeChoose > 0) {
+	    handleResize(isResizeChoose, pos.x, pos.y);
+	  }
 	default:
 	  //console.log('mousemove default!');
       }
@@ -377,7 +461,13 @@ $(function() {
           }
 	  break;
 	case modes.PICTURE:
-	  handlePictureInput(evt);
+	  if (isResizeChoose == 0 && isPictureChoose == false)
+	    handlePictureInput(evt);
+	  else {
+	    isResizeChoose = 0;
+	    isPictureChoose = false;
+	  }
+	    
 	default:
 	  //$('input').click();
 	  //console.log('mouseup default!');
@@ -390,10 +480,64 @@ $(function() {
         case modes.ERASE:
           isDrawing = false;
 	  break;
+	case modes.PICTURE:
+	  isResizeChoose = 0;
+	  isPictureChoose = false;
 	default:
 	  //console.log('mouseleave default!');
       }
     }, false);
+  }
+
+  function redrawAll(needAnchor) {
+    clearCanvas();
+    ctx.drawImage(img[currentChooseImage], 0, 0, img[currentChooseImage].width, img[currentChooseImage].height, 
+      imagePos[currentChooseImage].x, imagePos[currentChooseImage].y, imageWidth[currentChooseImage], imageHeight[currentChooseImage]);
+    if (needAnchor)
+      drawImageAnchorEdge(currentChooseImage);
+  }
+
+  function handleResize(num, x, y) {
+    switch (num) {
+      case 1:
+        imageWidth[currentChooseImage] = imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - x;
+	imageHeight[currentChooseImage] = imagePos[currentChooseImage].y + imageHeight[currentChooseImage] - y;
+        imagePos[currentChooseImage].x = x;
+        imagePos[currentChooseImage].y = y;
+	break;
+      case 2:
+        imageHeight[currentChooseImage] = imagePos[currentChooseImage].y + imageHeight[currentChooseImage] - y;
+	imagePos[currentChooseImage].y = y;
+	break;
+      case 3:
+        imageWidth[currentChooseImage] = x - imagePos[currentChooseImage].x;
+	imageHeight[currentChooseImage] = imagePos[currentChooseImage].y + imageHeight[currentChooseImage] - y;
+	imagePos[currentChooseImage].y = y;
+	break;
+      case 4:
+        imageWidth[currentChooseImage] = imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - x;
+	imagePos[currentChooseImage].x = x;
+	break;
+      case 5:
+        imageWidth[currentChooseImage] = x - imagePos[currentChooseImage].x;
+	break;
+      case 6:
+        imageWidth[currentChooseImage] = imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - x;
+	imageHeight[currentChooseImage] = y - imagePos[currentChooseImage].y;
+	imagePos[currentChooseImage].x = x;
+	break;
+      case 7:
+        imageHeight[currentChooseImage] = y - imagePos[currentChooseImage].y;
+	break;
+      case 8:
+        imageWidth[currentChooseImage] = x - imagePos[currentChooseImage].x;
+	imageHeight[currentChooseImage] = y - imagePos[currentChooseImage].y;
+	break;
+    }
+    // limited
+    if (imageHeight[currentChooseImage] < 25) imageHeight[currentChooseImage] = 25;
+    if (imageWidth[currentChooseImage] < 25) imageWidth[currentChooseImage] = 25
+    redrawAll(true);
   }
 
   function handlePictureInput(evt) {
@@ -631,11 +775,16 @@ $(function() {
     });
   }
 
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
   function addEraseListener(i) {
     $("#erase ul li:nth-child(" + (i + 1).toString() + ")").click(function() {
       if (i) {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+        clearCanvas();
 	clearArray();
+	clearImageInfo();
       }
       else
 	eraserChoose();
