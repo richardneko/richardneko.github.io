@@ -45,11 +45,13 @@ $(function() {
   var counterId;
 
   // Image information
+  var MAX_IMAGE_NUM = 5;
   var imageCount = 0;
   var currentChooseImage = -1;
   var anchorSize = 16;
   var isResizeChoose = 0;
   var isPictureChoose = false;
+  var moveStartPos;
   var img = new Array();
   var imageWidth = new Array();
   var imageHeight = new Array();
@@ -242,7 +244,7 @@ $(function() {
         "visibility": "visible",
 	"opacity": "1",
 	"transition-delay": "0s",
-	"z-index": "1"
+	"z-index": "2"
       });
       $("#setting").css("background-color", "#dedede");
     } else {
@@ -274,15 +276,12 @@ $(function() {
         y > imagePos[currentChooseImage].y - anchorSize / 2) {
       if (x < imagePos[currentChooseImage].x + anchorSize / 2 && 
           x > imagePos[currentChooseImage].x - anchorSize / 2) {
-        console.log('1 clicked');
 	return 1;
       } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 + anchorSize / 2 && 
                  x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 - anchorSize / 2) {
-        console.log('2 clicked');
 	return 2;
       } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] + anchorSize / 2 &&
                  x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - anchorSize / 2) {
-        console.log('3 clicked');
 	return 3;
       }
     } 
@@ -291,11 +290,9 @@ $(function() {
              y > imagePos[currentChooseImage].y + imageHeight[currentChooseImage] / 2 - anchorSize / 2) {
       if (x < imagePos[currentChooseImage].x + anchorSize / 2 &&
           x > imagePos[currentChooseImage].x - anchorSize / 2) {
-        console.log('4 clicked');
 	return 4;
       } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] + anchorSize / 2 &&
                  x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - anchorSize / 2) {
-        console.log('5 clicked');
 	return 5;
       }
     }
@@ -304,22 +301,47 @@ $(function() {
              y > imagePos[currentChooseImage].y + imageHeight[currentChooseImage] - anchorSize / 2) {
       if (x < imagePos[currentChooseImage].x + anchorSize / 2 &&
           x > imagePos[currentChooseImage].x - anchorSize / 2) {
-	console.log('6 clicked');
 	return 6;
       } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 + anchorSize / 2 &&
                  x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] / 2 - anchorSize / 2) {
-        console.log('7 clicked');
 	return 7;
       } else if (x < imagePos[currentChooseImage].x + imageWidth[currentChooseImage] + anchorSize / 2 &&
                  x > imagePos[currentChooseImage].x + imageWidth[currentChooseImage] - anchorSize / 2) {
-        console.log('8 clicked');
 	return 8;
       }
     } else
       return 0;
   }
 
+  function checkImageClicked(num, x, y) {
+    if ((x > imagePos[num].x && x < imagePos[num].x + imageWidth[num]) &&
+         (y > imagePos[num].y && y < imagePos[num].y + imageHeight[num])) {
+      return true;	 
+    }
+    return false;
+  }
+
   function pictureClicked(x, y) {
+    if (imageCount == 0)
+      return false;
+    
+    if (currentChooseImage != -1 && checkImageClicked(currentChooseImage, x, y)) {
+      return true;
+    }
+    
+    // other image choosed
+    for (var i = 0; i < imageCount; ++ i) {
+      if (i == currentChooseImage)
+        continue;
+      
+      if (checkImageClicked(i, x, y)) {
+	currentChooseImage = i;
+	redrawAll(true);
+	return true;
+      }
+    }
+    currentChooseImage = -1;
+    redrawAll(false);
     return false;
   }
 
@@ -415,6 +437,7 @@ $(function() {
 	  if ((ret = resizeClicked(pos.x, pos.y)) > 0) {
 	    isResizeChoose = ret;
 	  } else if (pictureClicked(pos.x, pos.y)) {
+	    moveStartPos = pos;
 	    isPictureChoose = true;
 	  }
 	default:
@@ -439,6 +462,8 @@ $(function() {
 	case modes.PICTURE:
 	  if (isResizeChoose > 0) {
 	    handleResize(isResizeChoose, pos.x, pos.y);
+	  } else if (isPictureChoose) {
+	    handleImageMove(pos.x, pos.y);
 	  }
 	default:
 	  //console.log('mousemove default!');
@@ -461,8 +486,10 @@ $(function() {
           }
 	  break;
 	case modes.PICTURE:
-	  if (isResizeChoose == 0 && isPictureChoose == false)
-	    handlePictureInput(evt);
+	  if (isResizeChoose == 0 && isPictureChoose == false) {
+	    if (imageCount < MAX_IMAGE_NUM)
+	      handlePictureInput(evt);
+	  }
 	  else {
 	    isResizeChoose = 0;
 	    isPictureChoose = false;
@@ -489,12 +516,33 @@ $(function() {
     }, false);
   }
 
+  function redrawImage(num) {
+    ctx.drawImage(img[num], 0, 0, img[num].width, img[num].height,
+        imagePos[num].x, imagePos[num].y, imageWidth[num], imageHeight[num]);
+  }
+  
   function redrawAll(needAnchor) {
     clearCanvas();
-    ctx.drawImage(img[currentChooseImage], 0, 0, img[currentChooseImage].width, img[currentChooseImage].height, 
-      imagePos[currentChooseImage].x, imagePos[currentChooseImage].y, imageWidth[currentChooseImage], imageHeight[currentChooseImage]);
+    for (var i = 0; i < imageCount; ++ i) {
+      if (i == currentChooseImage)
+        continue;
+      redrawImage(i);
+    }
+    if (currentChooseImage != -1) {
+      redrawImage(currentChooseImage);
+    }
     if (needAnchor)
       drawImageAnchorEdge(currentChooseImage);
+  }
+
+  function handleImageMove(x, y) {
+    var dx = x - moveStartPos.x;
+    var dy = y - moveStartPos.y;
+    imagePos[currentChooseImage].x += dx;
+    imagePos[currentChooseImage].y += dy;
+    moveStartPos.x = x;
+    moveStartPos.y = y;
+    redrawAll(true);
   }
 
   function handleResize(num, x, y) {

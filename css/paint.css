@@ -5,6 +5,7 @@ body {
 /* Canvas style */
 canvas {
   position: absolute;
+  z-index: 1;
 }
 
 input {
