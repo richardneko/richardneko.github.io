@@ -1,4 +1,12 @@
 $(function() {
+  // move array element to the top
+  Array.prototype.moveTop = function(idx) {
+    if (idx == 0 || idx == this.length)
+      return;
+
+    this.splice(0, 0, this.splice(idx, 1)[0]);
+  };
+
   var canvas = document.getElementById('paintCanvas');
   var ctx = canvas.getContext("2d");
   var fileloader = document.getElementById('fileUpload');
@@ -336,12 +344,12 @@ $(function() {
       
       if (checkImageClicked(i, x, y)) {
 	currentChooseImage = i;
-	redrawAll(true);
+	redrawAll();
 	return true;
       }
     }
     currentChooseImage = -1;
-    redrawAll(false);
+    redrawAll();
     return false;
   }
 
@@ -433,10 +441,9 @@ $(function() {
           isDrawing = true;
 	  break;
 	case modes.PICTURE:
-	  var ret;
-	  if ((ret = resizeClicked(pos.x, pos.y)) > 0) {
-	    isResizeChoose = ret;
-	  } else if (pictureClicked(pos.x, pos.y)) {
+	  //var ret;
+	  isResizeChoose = resizeClicked(pos.x, pos.y);
+	  if (isResizeChoose == 0 && pictureClicked(pos.x, pos.y)) {
 	    moveStartPos = pos;
 	    isPictureChoose = true;
 	  }
@@ -521,7 +528,7 @@ $(function() {
         imagePos[num].x, imagePos[num].y, imageWidth[num], imageHeight[num]);
   }
   
-  function redrawAll(needAnchor) {
+  function redrawAll() {
     clearCanvas();
     for (var i = 0; i < imageCount; ++ i) {
       if (i == currentChooseImage)
@@ -530,9 +537,8 @@ $(function() {
     }
     if (currentChooseImage != -1) {
       redrawImage(currentChooseImage);
-    }
-    if (needAnchor)
       drawImageAnchorEdge(currentChooseImage);
+    }
   }
 
   function handleImageMove(x, y) {
@@ -542,7 +548,7 @@ $(function() {
     imagePos[currentChooseImage].y += dy;
     moveStartPos.x = x;
     moveStartPos.y = y;
-    redrawAll(true);
+    redrawAll();
   }
 
   function handleResize(num, x, y) {
@@ -585,7 +591,7 @@ $(function() {
     // limited
     if (imageHeight[currentChooseImage] < 25) imageHeight[currentChooseImage] = 25;
     if (imageWidth[currentChooseImage] < 25) imageWidth[currentChooseImage] = 25
-    redrawAll(true);
+    redrawAll();
   }
 
   function handlePictureInput(evt) {
