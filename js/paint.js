@@ -7,6 +7,15 @@ $(function() {
     this.splice(0, 0, this.splice(idx, 1)[0]);
   };
 
+  // move array element to the top
+  Array.prototype.moveBack = function(idx) {
+    if (idx >= this.length - 1)
+      return;
+    var tmp = this[idx];
+    this.splice(idx, 1);
+    this.push(tmp);
+  };
+
   var canvas = document.getElementById('paintCanvas');
   var ctx = canvas.getContext("2d");
   var fileloader = document.getElementById('fileUpload');
@@ -92,7 +101,8 @@ $(function() {
 	  ctx.drawImage(img[imageCount], 0, 0, img[imageCount].width, img[imageCount].height, 
 	  		imagePos[imageCount].x, imagePos[imageCount].y, imageWidth[imageCount], imageHeight[imageCount]);
 	  currentChooseImage = imageCount;
-	  imagePriority.unshift(currentChooseImage);
+	  //imagePriority.unshift(currentChooseImage);
+	  imagePriority.push(currentChooseImage);
 	  console.log('new image insert, array: ' + imagePriority);
 	  imageCount ++;
 	  redrawAll();
@@ -343,14 +353,15 @@ $(function() {
     
     // check other image choosed
     for (var i = 0; i < imageCount; ++ i) {
-      if (i == currentChooseImage)
+      if (imagePriority[i] == currentChooseImage)
         continue;
       
       // other image choosed
-      if (checkPictureClicked(i, x, y)) {
-	currentChooseImage = i;
-	imagePriority.moveTop(imagePriority.indexOf(i));
-	console.log('image ' + i + ' choosed, array: ' + imagePriority);
+      if (checkPictureClicked(imagePriority[i], x, y)) {
+	console.log('image ' + imagePriority[i]);
+	currentChooseImage = imagePriority[i];
+	imagePriority.moveBack(imagePriority.indexOf(imagePriority[i]));
+	console.log('array: ' + imagePriority);
 	redrawAll();
 	return true;
       }
@@ -540,12 +551,12 @@ $(function() {
     clearCanvas();
     // redraw images
     for (var i = 0; i < imageCount; ++ i) {
-      if (imagePriority[i] == currentChooseImage)
-        continue;
+      //if (imagePriority[i] == currentChooseImage)
+      //  continue;
       redrawImage(imagePriority[i]);
     }
     if (currentChooseImage != -1) {
-      redrawImage(currentChooseImage);
+      //redrawImage(currentChooseImage);
       drawImageAnchorEdge(currentChooseImage);
     }
     // redraw all lines
@@ -687,7 +698,8 @@ $(function() {
 	//ctx.stroke();
       }
     }
-    ctx.stroke();
+    if (chooseLen != -1)
+      ctx.stroke();
   }
 
   function clearArray() {
