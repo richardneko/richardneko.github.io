@@ -92,10 +92,10 @@ $(function() {
 	  ctx.drawImage(img[imageCount], 0, 0, img[imageCount].width, img[imageCount].height, 
 	  		imagePos[imageCount].x, imagePos[imageCount].y, imageWidth[imageCount], imageHeight[imageCount]);
 	  currentChooseImage = imageCount;
-	  drawImageAnchorEdge(currentChooseImage);
 	  imagePriority.unshift(currentChooseImage);
 	  console.log('new image insert, array: ' + imagePriority);
 	  imageCount ++;
+	  redrawAll();
 	}
 	img[imageCount].src = evt.target.result;
       }
@@ -629,6 +629,7 @@ $(function() {
     fullDrawX.push(x);
     fullDrawY.push('d');
     fullDrawY.push(y);
+    console.log('currentMode: ' + currentMode);
     if (currentMode == modes.ERASE)
       fullDrawColor.push('white');
     else if (currentMode == modes.DRAW)
@@ -672,6 +673,9 @@ $(function() {
     
     for (var i = 0; i < fullDrawX.length; i ++) {
       if (fullDrawX[i] == 'd') {
+	if (i != 0) {
+	  ctx.stroke();
+	}
 	chooseLen = chooseLen + 1;
 	ctx.lineWidth = sizes[fullDrawSize[chooseLen] - 1];
 	ctx.strokeStyle = fullDrawColor[chooseLen];
@@ -680,9 +684,10 @@ $(function() {
 	i = i + 1;
       } else {
         ctx.lineTo(fullDrawX[i], fullDrawY[i]);
-	ctx.stroke();
+	//ctx.stroke();
       }
     }
+    ctx.stroke();
   }
 
   function clearArray() {
