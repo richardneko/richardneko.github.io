@@ -64,6 +64,7 @@ $(function() {
   var imageWidth = new Array();
   var imageHeight = new Array();
   var imagePos = new Array();
+  var imagePriority = new Array();
 
   initCanvasSettings();
   initImageLoader();
@@ -90,8 +91,10 @@ $(function() {
 	  imageHeight[imageCount] = img[imageCount].height / 2;
 	  ctx.drawImage(img[imageCount], 0, 0, img[imageCount].width, img[imageCount].height, 
 	  		imagePos[imageCount].x, imagePos[imageCount].y, imageWidth[imageCount], imageHeight[imageCount]);
-	  drawImageAnchorEdge(imageCount);
 	  currentChooseImage = imageCount;
+	  drawImageAnchorEdge(currentChooseImage);
+	  imagePriority.unshift(currentChooseImage);
+	  console.log('new image insert, array: ' + imagePriority);
 	  imageCount ++;
 	}
 	img[imageCount].src = evt.target.result;
@@ -120,7 +123,7 @@ $(function() {
     drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] / 2 - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] - anchorSize / 2);
     drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] - anchorSize / 2);
 
-    // draw edge
+    // draw image edge
     ctx.save();
     ctx.lineWidth = 4;
     ctx.strokeStyle = 'black';
@@ -143,6 +146,7 @@ $(function() {
     imageWidth = [];
     imageHeight = [];
     imagePos = [];
+    imagePriority = [];
   }
 
   // Size menu listener
@@ -321,7 +325,7 @@ $(function() {
       return 0;
   }
 
-  function checkImageClicked(num, x, y) {
+  function checkPictureClicked(num, x, y) {
     if ((x > imagePos[num].x && x < imagePos[num].x + imageWidth[num]) &&
          (y > imagePos[num].y && y < imagePos[num].y + imageHeight[num])) {
       return true;	 
@@ -333,21 +337,25 @@ $(function() {
     if (imageCount == 0)
       return false;
     
-    if (currentChooseImage != -1 && checkImageClicked(currentChooseImage, x, y)) {
+    if (currentChooseImage != -1 && checkPictureClicked(currentChooseImage, x, y)) {
       return true;
     }
     
-    // other image choosed
+    // check other image choosed
     for (var i = 0; i < imageCount; ++ i) {
       if (i == currentChooseImage)
         continue;
       
-      if (checkImageClicked(i, x, y)) {
+      // other image choosed
+      if (checkPictureClicked(i, x, y)) {
 	currentChooseImage = i;
+	imagePriority.moveTop(imagePriority.indexOf(i));
+	console.log('image ' + i + ' choosed, array: ' + imagePriority);
 	redrawAll();
 	return true;
       }
     }
+    // none of image choosed
     currentChooseImage = -1;
     redrawAll();
     return false;
@@ -530,15 +538,18 @@ $(function() {
   
   function redrawAll() {
     clearCanvas();
+    // redraw images
     for (var i = 0; i < imageCount; ++ i) {
-      if (i == currentChooseImage)
+      if (imagePriority[i] == currentChooseImage)
         continue;
-      redrawImage(i);
+      redrawImage(imagePriority[i]);
     }
     if (currentChooseImage != -1) {
       redrawImage(currentChooseImage);
       drawImageAnchorEdge(currentChooseImage);
     }
+    // redraw all lines
+    redraw();
   }
 
   function handleImageMove(x, y) {
@@ -620,7 +631,7 @@ $(function() {
     fullDrawY.push(y);
     if (currentMode == modes.ERASE)
       fullDrawColor.push('white');
-    else if (currentMode == modes.Draw)
+    else if (currentMode == modes.DRAW)
       fullDrawColor.push(colors[currentColor - 1]);
     fullDrawSize.push(currentSize);
   }
