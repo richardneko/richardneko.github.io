@@ -73,7 +73,6 @@ $(function() {
   var imageWidth = new Array();
   var imageHeight = new Array();
   var imagePos = new Array();
-  var imagePriority = new Array();
 
   initCanvasSettings();
   initImageLoader();
@@ -101,9 +100,6 @@ $(function() {
 	  ctx.drawImage(img[imageCount], 0, 0, img[imageCount].width, img[imageCount].height, 
 	  		imagePos[imageCount].x, imagePos[imageCount].y, imageWidth[imageCount], imageHeight[imageCount]);
 	  currentChooseImage = imageCount;
-	  //imagePriority.unshift(currentChooseImage);
-	  imagePriority.push(currentChooseImage);
-	  console.log('new image insert, array: ' + imagePriority);
 	  imageCount ++;
 	  redrawAll();
 	}
@@ -156,7 +152,6 @@ $(function() {
     imageWidth = [];
     imageHeight = [];
     imagePos = [];
-    imagePriority = [];
   }
 
   // Size menu listener
@@ -187,6 +182,16 @@ $(function() {
     ex_ctx.moveTo(centerX, centerY);
     ex_ctx.lineTo(centerX, centerY + 0.5);
     ex_ctx.stroke();
+  }
+
+  function setMode(mode) {
+    switch(currentMode) {
+      case modes.PICTURE:
+        if ((mode == modes.DRAW || mode == modes.ERASE) && currentChooseImage != -1)
+	  unchooseImage();
+	break;
+    }
+    currentMode = mode;
   }
 
   // Color menu listener
@@ -335,6 +340,12 @@ $(function() {
       return 0;
   }
 
+  function unchooseImage() {
+    pushImage(currentChooseImage);
+    currentChooseImage = -1;
+    redrawAll();
+  }
+
   function checkPictureClicked(num, x, y) {
     if ((x > imagePos[num].x && x < imagePos[num].x + imageWidth[num]) &&
          (y > imagePos[num].y && y < imagePos[num].y + imageHeight[num])) {
@@ -353,22 +364,23 @@ $(function() {
     
     // check other image choosed
     for (var i = 0; i < imageCount; ++ i) {
-      if (imagePriority[i] == currentChooseImage)
+      if (i == currentChooseImage)
         continue;
       
       // other image choosed
-      if (checkPictureClicked(imagePriority[i], x, y)) {
-	console.log('image ' + imagePriority[i]);
-	currentChooseImage = imagePriority[i];
-	imagePriority.moveBack(imagePriority.indexOf(imagePriority[i]));
-	console.log('array: ' + imagePriority);
+      if (checkPictureClicked(i, x, y)) {
+	if (currentChooseImage != -1)
+	  unchooseImage();
+	currentChooseImage = i;
 	redrawAll();
 	return true;
       }
     }
+    
     // none of image choosed
-    currentChooseImage = -1;
-    redrawAll();
+    if (currentChooseImage != -1)
+      unchooseImage();
+
     return false;
   }
 
@@ -506,6 +518,7 @@ $(function() {
           if (isDrawing) {
             var pos = getMousePos(canvas, evt);
 	    drawContinue(pos.x, pos.y + 0.5);
+	    drawUp();
 	    ctx.lineTo(pos.x, pos.y + 0.5);
             ctx.stroke();
             isDrawing = false;
@@ -549,18 +562,13 @@ $(function() {
   
   function redrawAll() {
     clearCanvas();
-    // redraw images
-    for (var i = 0; i < imageCount; ++ i) {
-      //if (imagePriority[i] == currentChooseImage)
-      //  continue;
-      redrawImage(imagePriority[i]);
-    }
+    // redraw all canvas except current image
+    redraw();
+    // redraw current image
     if (currentChooseImage != -1) {
-      //redrawImage(currentChooseImage);
+      redrawImage(currentChooseImage);
       drawImageAnchorEdge(currentChooseImage);
     }
-    // redraw all lines
-    redraw();
   }
 
   function handleImageMove(x, y) {
@@ -635,12 +643,18 @@ $(function() {
     }
   }
 
+  function pushImage(num) {
+    // x indicate that image push
+    fullDrawX.push('p');
+    // y indicate which image been pushed
+    fullDrawY.push(num);
+  }
+
   function drawStart(x, y) {
     fullDrawX.push('d');
     fullDrawX.push(x);
     fullDrawY.push('d');
     fullDrawY.push(y);
-    console.log('currentMode: ' + currentMode);
     if (currentMode == modes.ERASE)
       fullDrawColor.push('white');
     else if (currentMode == modes.DRAW)
@@ -652,7 +666,11 @@ $(function() {
     fullDrawX.push(x);
     fullDrawY.push(y);
   }
-
+  
+  function drawUp() {
+    fullDrawX.push('u');
+    fullDrawY.push('u');
+  }
 /* keep it for future use
   function drawCircle(x, y, color) {
     ctx.beginPath();
@@ -684,21 +702,29 @@ $(function() {
     
     for (var i = 0; i < fullDrawX.length; i ++) {
       if (fullDrawX[i] == 'd') {
-	if (i != 0) {
-	  ctx.stroke();
-	}
 	chooseLen = chooseLen + 1;
 	ctx.lineWidth = sizes[fullDrawSize[chooseLen] - 1];
 	ctx.strokeStyle = fullDrawColor[chooseLen];
 	ctx.beginPath();
 	ctx.moveTo(fullDrawX[i + 1], fullDrawY[i + 1]);
 	i = i + 1;
+      } else if(fullDrawX[i] == 'p') {
+	if (currentChooseImage != -1 && currentChooseImage == fullDrawY[i]) {
+	  // position changed
+	  fullDrawX[i] = 'x';
+	  continue;
+	}
+	redrawImage(fullDrawY[i]);
+      } else if (fullDrawX[i] == 'x') {
+        continue;
+      } else if (fullDrawX[i] == 'u') {
+        ctx.stroke();
       } else {
         ctx.lineTo(fullDrawX[i], fullDrawY[i]);
 	//ctx.stroke();
       }
     }
-    if (chooseLen != -1)
+    if (chooseLen != -1 && fullDrawX[fullDrawX.length - 1] != 'p')
       ctx.stroke();
   }
 
@@ -739,7 +765,7 @@ $(function() {
     // May be eraser choose
     if (currentMode == modes.ERASE) {
       toDefaultColor('#erase', 1);
-      currentMode = modes.DRAW;
+      setMode(modes.DRAW);
     } else if (currentMode == modes.PICTURE || currentMode == modes.KEYBOARD) {
       if (previousMode == modes.ERASE) {
         previousMode = modes.DRAW;
@@ -762,7 +788,7 @@ $(function() {
     if (currentMode == modes.DRAW) {
       toDefaultColor('#color', currentColor);
       currentColor = 0;
-      currentMode = modes.ERASE;
+      setMode(modes.ERASE);
     } else if (currentMode == modes.PICTURE || currentMode == modes.KEYBOARD) {
       if (previousMode == modes.DRAW) {
         previousMode = modes.ERASE;
@@ -893,32 +919,32 @@ $(function() {
           return;
 	} else if (menuChoose[i] == '#pic') {
 	  if (currentMode == modes.PICTURE) {
-	    currentMode = previousMode;
+	    setMode(previousMode);
 	    menuChoosed(i, false);
 	  } else if (currentMode == modes.KEYBOARD) {
-	    currentMode = modes.PICTURE;
+	    setMode(modes.PICTURE);
 	    menuChoosed(i, true);
 	    menuChoosed(4, false);
 	    showHideMenu(openMenu, false);
 	  } else {
 	    previousMode = currentMode;
-	    currentMode = modes.PICTURE;
+	    setMode(modes.PICTURE);
 	    menuChoosed(i, true);
 	    showHideMenu(openMenu, false);
 	  }
 	  return;
 	} else if (menuChoose[i] == '#keyboard') {
 	  if (currentMode == modes.KEYBOARD) {
-	    currentMode = previousMode;
+	    setMode(previousMode);
 	    menuChoosed(i, false);
 	  } else if (currentMode == modes.PICTURE) {
-	    currentMode = modes.KEYBOARD;
+	    setMode(modes.KEYBOARD);
 	    menuChoosed(i, true);
 	    menuChoosed(5, false);
 	    showHideMenu(openMenu, false);
 	  } else {
 	    previousMode = currentMode;
-	    currentMode = modes.KEYBOARD;
+	    setMode(modes.KEYBOARD);
 	    menuChoosed(i, true);
 	    showHideMenu(openMenu, false);
 	  }
