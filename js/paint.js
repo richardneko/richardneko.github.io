@@ -63,6 +63,7 @@ $(function() {
 
   // Image information
   var MAX_IMAGE_NUM = 5;
+  var newImagePos;
   var imageCount = 0;
   var currentChooseImage = -1;
   var anchorSize = 16;
@@ -73,6 +74,11 @@ $(function() {
   var imageWidth = new Array();
   var imageHeight = new Array();
   var imagePos = new Array();
+ 
+  var deleteButtonSize = 50;
+  var deleteButtonGap = 20;
+
+  var needOpenUpload = true;
 
   initCanvasSettings();
   initImageLoader();
@@ -90,23 +96,29 @@ $(function() {
   }
   
   function initImageLoader() {
+    initImgArray();
     fileloader.addEventListener('change', function(e) {
       var reader = new FileReader();
       reader.onload = function(evt) {
-        img[imageCount] = new Image();
-	img[imageCount].onload = function() {
-	  imageWidth[imageCount] = img[imageCount].width / 2;
-	  imageHeight[imageCount] = img[imageCount].height / 2;
-	  ctx.drawImage(img[imageCount], 0, 0, img[imageCount].width, img[imageCount].height, 
-	  		imagePos[imageCount].x, imagePos[imageCount].y, imageWidth[imageCount], imageHeight[imageCount]);
-	  currentChooseImage = imageCount;
+        img[newImagePos] = new Image();
+	img[newImagePos].onload = function() {
+	  imageWidth[newImagePos] = img[newImagePos].width / 2;
+	  imageHeight[newImagePos] = img[newImagePos].height / 2;
+	  ctx.drawImage(img[newImagePos], 0, 0, img[newImagePos].width, img[newImagePos].height, 
+	  		imagePos[newImagePos].x, imagePos[newImagePos].y, imageWidth[newImagePos], imageHeight[newImagePos]);
+	  currentChooseImage = newImagePos;
 	  imageCount ++;
 	  redrawAll();
 	}
-	img[imageCount].src = evt.target.result;
+	img[newImagePos].src = evt.target.result;
       }
       reader.readAsDataURL(e.target.files[0]);
     }, false);
+  }
+
+  function initImgArray() {
+    for (var i = 0; i < MAX_IMAGE_NUM; ++ i)
+      img[i] = -1;
   }
 
   function drawAnchor(x, y) {
@@ -139,6 +151,35 @@ $(function() {
     ctx.lineTo(imagePos[imageNum].x + imageWidth[imageNum], imagePos[imageNum].y + imageHeight[imageNum]);
     ctx.lineTo(imagePos[imageNum].x, imagePos[imageNum].y + imageHeight[imageNum]);
     ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function findButtonPosition(imageNum) {
+    var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 - deleteButtonSize / 2;
+    var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;
+    return {
+      x: bottomX,
+      y: bottomY
+    };
+  }
+
+  function drawImageDeleteButton(imageNum) {
+    var buttonPos = findButtonPosition(imageNum);
+    ctx.save();
+    ctx.beginPath();
+    // draw button
+    ctx.fillStyle = '#ff3232';
+    ctx.rect(buttonPos.x, buttonPos.y, deleteButtonSize, deleteButtonSize);
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+    // draw 'X'
+    ctx.moveTo(buttonPos.x + 10, buttonPos.y + 10);
+    ctx.lineTo(buttonPos.x + deleteButtonSize - 10, buttonPos.y + deleteButtonSize - 10);
+    ctx.moveTo(buttonPos.x + deleteButtonSize - 10, buttonPos.y + 10);
+    ctx.lineTo(buttonPos.x + 10, buttonPos.y + deleteButtonSize - 10);
     ctx.stroke();
     ctx.restore();
   }
@@ -341,8 +382,10 @@ $(function() {
   }
 
   function unchooseImage() {
-    pushImage(currentChooseImage);
-    currentChooseImage = -1;
+    if (currentChooseImage != -1) {  
+      pushImage(currentChooseImage);
+      currentChooseImage = -1;
+    }
     redrawAll();
   }
 
@@ -363,12 +406,12 @@ $(function() {
     }
     
     // check other image choosed
-    for (var i = 0; i < imageCount; ++ i) {
+    for (var i = 0; i < MAX_IMAGE_NUM; ++ i) {
       if (i == currentChooseImage)
         continue;
       
       // other image choosed
-      if (checkPictureClicked(i, x, y)) {
+      if (img[i] != -1 && checkPictureClicked(i, x, y)) {
 	if (currentChooseImage != -1)
 	  unchooseImage();
 	currentChooseImage = i;
@@ -381,6 +424,15 @@ $(function() {
     if (currentChooseImage != -1)
       unchooseImage();
 
+    return false;
+  }
+
+  function deleteButtonClicked(imageNum, mousePos) {
+    var buttonPos = findButtonPosition(imageNum);
+
+    if ((mousePos.x > buttonPos.x && mousePos.x < buttonPos.x + deleteButtonSize) &&
+         mousePos.y > buttonPos.y && mousePos.y <buttonPos.y + deleteButtonSize)
+	 return true;
     return false;
   }
 
@@ -472,12 +524,22 @@ $(function() {
           isDrawing = true;
 	  break;
 	case modes.PICTURE:
-	  //var ret;
+	  if (currentChooseImage != -1 && deleteButtonClicked(currentChooseImage, pos)) {
+	    handlePictureDelete(currentChooseImage);
+	    needOpenUpload = false;
+	    return;
+	  }
+
+	  var pre = currentChooseImage;
 	  isResizeChoose = resizeClicked(pos.x, pos.y);
 	  if (isResizeChoose == 0 && pictureClicked(pos.x, pos.y)) {
 	    moveStartPos = pos;
 	    isPictureChoose = true;
 	  }
+	  if (pre != -1 && currentChooseImage == -1)
+	    needOpenUpload = false;
+
+	  break;
 	default:
 	  //console.log('mousedown default!');
       }
@@ -503,6 +565,7 @@ $(function() {
 	  } else if (isPictureChoose) {
 	    handleImageMove(pos.x, pos.y);
 	  }
+	  break;
 	default:
 	  //console.log('mousemove default!');
       }
@@ -533,7 +596,7 @@ $(function() {
 	    isResizeChoose = 0;
 	    isPictureChoose = false;
 	  }
-	    
+	  break;  
 	default:
 	  //$('input').click();
 	  //console.log('mouseup default!');
@@ -549,6 +612,7 @@ $(function() {
 	case modes.PICTURE:
 	  isResizeChoose = 0;
 	  isPictureChoose = false;
+	  break;
 	default:
 	  //console.log('mouseleave default!');
       }
@@ -568,6 +632,7 @@ $(function() {
     if (currentChooseImage != -1) {
       redrawImage(currentChooseImage);
       drawImageAnchorEdge(currentChooseImage);
+      drawImageDeleteButton(currentChooseImage);
     }
   }
 
@@ -624,9 +689,30 @@ $(function() {
     redrawAll();
   }
 
+  function findAvaliableSpace() {
+    var i;
+    for (i = 0; i < MAX_IMAGE_NUM; ++ i) {
+      if (img[i] == -1)
+        break;
+    }
+    return i;
+  }
+
   function handlePictureInput(evt) {
-    imagePos[imageCount] = getMousePos(canvas, evt);
+    if (!needOpenUpload) {
+      needOpenUpload = true;
+      return;
+    }
+    newImagePos = findAvaliableSpace();
+    imagePos[newImagePos] = getMousePos(canvas, evt);
     $('input').click();
+  }
+
+  function handlePictureDelete(imageNum) {
+    img[imageNum] = -1;
+    currentChooseImage = -1;
+    unchooseImage();
+    imageCount --;
   }
 
   function setMenuTimer(enable) {
