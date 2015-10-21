@@ -410,10 +410,10 @@ $(function() {
   }
 
   function unchooseImage() {
-    if (currentChooseImage != -1) {  
-      pushImage(currentChooseImage);
+    //if (currentChooseImage != -1) {  
+    //  pushImage(currentChooseImage);
       currentChooseImage = -1;
-    }
+    //}
     redrawAll();
   }
 
@@ -427,7 +427,7 @@ $(function() {
 
   function pictureClicked(x, y) {
     if (currentChooseImage != -1 && checkPictureClicked(currentChooseImage, x, y)) {
-      return true;
+      return currentChooseImage;
     }
     
     // check other image choosed
@@ -437,19 +437,21 @@ $(function() {
       
       // other image choosed
       if (img[i] != -1 && checkPictureClicked(i, x, y)) {
-	if (currentChooseImage != -1)
-	  unchooseImage();
-	currentChooseImage = i;
-	redrawAll();
-	return true;
+	//if (currentChooseImage != -1)
+	//  unchooseImage();
+	//currentChooseImage = i;
+	//redrawAll();
+	return i;
       }
     }
+
+    return -1
     
     // none of image choosed
 //    if (currentChooseImage != -1)
 //      unchooseImage();
 
-    return false;
+    //return false;
   }
 
   function deleteButtonClicked(imageNum, mousePos) {
@@ -574,15 +576,20 @@ $(function() {
 	    if (isResizeChoose == 0 && checkPictureClicked(currentChooseImage, pos.x, pos.y)) {
 	      moveStartPos = pos;
 	      isPictureChoose = true;
-	      return;
 	    }
-	  } else {	
-	    if (pictureClicked(pos.x, pos.y)) {
+	  } else {
+	    var ret;
+	    if (currentChooseImage == -1) {
+	      ret = pictureClicked(pos.x, pos.y);
+	      if (ret != -1) {
+	        currentChooseImage = ret;
+		redrawAll();
+		needOpenUpload = false;
+	      }
+	    } else {
 	      needOpenUpload = false;
-	      return;
 	    }
 	  }
-	  needOpenUpload = true;
 /*
 	  var pre = currentChooseImage;
 	  isResizeChoose = resizeClicked(pos.x, pos.y);
@@ -644,7 +651,7 @@ $(function() {
 	  break;
 	case modes.PICTURE:
 	  if (isResizeChoose == 0 && isPictureChoose == false) {
-	    if (imageCount < MAX_IMAGE_NUM)
+	    if (!isImageOnload && imageCount < MAX_IMAGE_NUM)
 	      handlePictureInput(evt);
 	  }
 	  else {
@@ -771,16 +778,19 @@ $(function() {
     if (isImageOnload)
       isImageOnload = false;
     img[imageNum] = -1;
-    currentChooseImage = -1;
     unchooseImage();
     imageCount --;
   }
 
   function handlePictureEnter(imageNum) {
-    if (isImageOnload)
+    if (isImageOnload) {
+      imageCount ++;
+      pushImage(currentChooseImage);
+      unchooseImage();
       isImageOnload = false;
-    unchooseImage();
-    imageCount ++;
+    } else {
+      unchooseImage();
+    }
   }
 
   function setMenuTimer(enable) {
@@ -863,8 +873,12 @@ $(function() {
 	ctx.moveTo(fullDrawX[i + 1], fullDrawY[i + 1]);
 	i = i + 1;
       } else if(fullDrawX[i] == 'p') {
-	if (currentChooseImage != -1 && currentChooseImage == fullDrawY[i]) {
+	if (currentChooseImage != -1 && currentChooseImage == fullDrawY[i] && isImageOnload) {
 	  // position changed
+	  fullDrawX[i] = 'x';
+	  continue;
+	}
+	if (img[fullDrawY[i]] == -1) {
 	  fullDrawX[i] = 'x';
 	  continue;
 	}
