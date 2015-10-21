@@ -32,6 +32,7 @@ $(function() {
   var isDrawing = false;
   var menuShow = false;
   var menuCounter = false;
+  var isImageOnload = false;
 
   var colors = ['black', 'blue', 'red', 'yellow'];
   var sizes = [5, 10, 20, 40];
@@ -63,7 +64,7 @@ $(function() {
 
   // Image information
   var MAX_IMAGE_NUM = 5;
-  var newImagePos;
+  var newImagePos = -1;
   var imageCount = 0;
   var currentChooseImage = -1;
   var anchorSize = 16;
@@ -107,7 +108,8 @@ $(function() {
 	  ctx.drawImage(img[newImagePos], 0, 0, img[newImagePos].width, img[newImagePos].height, 
 	  		imagePos[newImagePos].x, imagePos[newImagePos].y, imageWidth[newImagePos], imageHeight[newImagePos]);
 	  currentChooseImage = newImagePos;
-	  imageCount ++;
+	  //imageCount ++;
+	  isImageOnload = true;
 	  redrawAll();
 	}
 	img[newImagePos].src = evt.target.result;
@@ -128,6 +130,20 @@ $(function() {
     ctx.restore();
   }
   
+  function drawImageEdge(imageNum) {
+    ctx.save();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'black';
+    ctx.beginPath();
+    ctx.moveTo(imagePos[imageNum].x, imagePos[imageNum].y);
+    ctx.lineTo(imagePos[imageNum].x + imageWidth[imageNum], imagePos[imageNum].y);
+    ctx.lineTo(imagePos[imageNum].x + imageWidth[imageNum], imagePos[imageNum].y + imageHeight[imageNum]);
+    ctx.lineTo(imagePos[imageNum].x, imagePos[imageNum].y + imageHeight[imageNum]);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore(); 
+  }
+  
   function drawImageAnchorEdge(imageNum) {
     // top left, top middle, top right
     drawAnchor(imagePos[imageNum].x - anchorSize / 2, imagePos[imageNum].y - anchorSize / 2);
@@ -142,22 +158,19 @@ $(function() {
     drawAnchor(imagePos[imageNum].x + imageWidth[imageNum] - anchorSize / 2, imagePos[imageNum].y + imageHeight[imageNum] - anchorSize / 2);
 
     // draw image edge
-    ctx.save();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'black';
-    ctx.beginPath();
-    ctx.moveTo(imagePos[imageNum].x, imagePos[imageNum].y);
-    ctx.lineTo(imagePos[imageNum].x + imageWidth[imageNum], imagePos[imageNum].y);
-    ctx.lineTo(imagePos[imageNum].x + imageWidth[imageNum], imagePos[imageNum].y + imageHeight[imageNum]);
-    ctx.lineTo(imagePos[imageNum].x, imagePos[imageNum].y + imageHeight[imageNum]);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
+    drawImageEdge(imageNum);
   }
 
-  function findButtonPosition(imageNum) {
-    var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 - deleteButtonSize / 2;
-    var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;
+  function findButtonPosition(imageNum, type) {
+    // delete
+    if (type ==  0) {
+      var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 + deleteButtonSize / 2;
+      var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;
+    // enter
+    } else {
+      var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 - deleteButtonSize * 3 / 2;
+      var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;    
+    }
     return {
       x: bottomX,
       y: bottomY
@@ -165,7 +178,7 @@ $(function() {
   }
 
   function drawImageDeleteButton(imageNum) {
-    var buttonPos = findButtonPosition(imageNum);
+    var buttonPos = findButtonPosition(imageNum, 0);
     ctx.save();
     ctx.beginPath();
     // draw button
@@ -180,6 +193,21 @@ $(function() {
     ctx.lineTo(buttonPos.x + deleteButtonSize - 10, buttonPos.y + deleteButtonSize - 10);
     ctx.moveTo(buttonPos.x + deleteButtonSize - 10, buttonPos.y + 10);
     ctx.lineTo(buttonPos.x + 10, buttonPos.y + deleteButtonSize - 10);
+    ctx.stroke();
+
+    buttonPos = findButtonPosition(imageNum, 1);
+    ctx.beginPath();
+    // draw button
+    ctx.fillStyle = '#32ff32';
+    ctx.rect(buttonPos.x, buttonPos.y, deleteButtonSize, deleteButtonSize);
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+    // draw 'V'
+    ctx.moveTo(buttonPos.x + 10, buttonPos.y + 10);
+    ctx.lineTo(buttonPos.x + deleteButtonSize / 2, buttonPos.y + deleteButtonSize - 10);
+    ctx.lineTo(buttonPos.x + deleteButtonSize - 10, buttonPos.y + 10);
     ctx.stroke();
     ctx.restore();
   }
@@ -398,9 +426,6 @@ $(function() {
   }
 
   function pictureClicked(x, y) {
-    if (imageCount == 0)
-      return false;
-    
     if (currentChooseImage != -1 && checkPictureClicked(currentChooseImage, x, y)) {
       return true;
     }
@@ -421,18 +446,27 @@ $(function() {
     }
     
     // none of image choosed
-    if (currentChooseImage != -1)
-      unchooseImage();
+//    if (currentChooseImage != -1)
+//      unchooseImage();
 
     return false;
   }
 
   function deleteButtonClicked(imageNum, mousePos) {
-    var buttonPos = findButtonPosition(imageNum);
+    var buttonPos = findButtonPosition(imageNum, 0);
 
     if ((mousePos.x > buttonPos.x && mousePos.x < buttonPos.x + deleteButtonSize) &&
          mousePos.y > buttonPos.y && mousePos.y <buttonPos.y + deleteButtonSize)
 	 return true;
+    return false;
+  }
+
+  function enterButtonClicked(imageNum, mousePos) {
+    var buttonPos = findButtonPosition(imageNum, 1);
+
+    if ((mousePos.x > buttonPos.x && mousePos.x < buttonPos.x + deleteButtonSize) &&
+         mousePos.y > buttonPos.y && mousePos.y <buttonPos.y + deleteButtonSize)
+         return true;
     return false;
   }
 
@@ -528,8 +562,28 @@ $(function() {
 	    handlePictureDelete(currentChooseImage);
 	    needOpenUpload = false;
 	    return;
+	  } else if (currentChooseImage != -1 && enterButtonClicked(currentChooseImage, pos)) {
+	    handlePictureEnter(currentChooseImage);
+	    needOpenUpload = false;
+	    return;
 	  }
 
+	  // only do move, resize on newly add image
+	  if (isImageOnload) {
+	    isResizeChoose = resizeClicked(pos.x, pos.y);
+	    if (isResizeChoose == 0 && checkPictureClicked(currentChooseImage, pos.x, pos.y)) {
+	      moveStartPos = pos;
+	      isPictureChoose = true;
+	      return;
+	    }
+	  } else {	
+	    if (pictureClicked(pos.x, pos.y)) {
+	      needOpenUpload = false;
+	      return;
+	    }
+	  }
+	  needOpenUpload = true;
+/*
 	  var pre = currentChooseImage;
 	  isResizeChoose = resizeClicked(pos.x, pos.y);
 	  if (isResizeChoose == 0 && pictureClicked(pos.x, pos.y)) {
@@ -538,7 +592,7 @@ $(function() {
 	  }
 	  if (pre != -1 && currentChooseImage == -1)
 	    needOpenUpload = false;
-
+*/
 	  break;
 	default:
 	  //console.log('mousedown default!');
@@ -560,6 +614,7 @@ $(function() {
           }
 	  break;
 	case modes.PICTURE:
+	  // only do move, resize on newly add image
 	  if (isResizeChoose > 0) {
 	    handleResize(isResizeChoose, pos.x, pos.y);
 	  } else if (isPictureChoose) {
@@ -695,6 +750,8 @@ $(function() {
       if (img[i] == -1)
         break;
     }
+    if (i == MAX_IMAGE_NUM)
+      return -1;
     return i;
   }
 
@@ -704,15 +761,26 @@ $(function() {
       return;
     }
     newImagePos = findAvaliableSpace();
+    if (newImagePos == -1)
+      return;
     imagePos[newImagePos] = getMousePos(canvas, evt);
     $('input').click();
   }
 
   function handlePictureDelete(imageNum) {
+    if (isImageOnload)
+      isImageOnload = false;
     img[imageNum] = -1;
     currentChooseImage = -1;
     unchooseImage();
     imageCount --;
+  }
+
+  function handlePictureEnter(imageNum) {
+    if (isImageOnload)
+      isImageOnload = false;
+    unchooseImage();
+    imageCount ++;
   }
 
   function setMenuTimer(enable) {
