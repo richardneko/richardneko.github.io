@@ -259,7 +259,7 @@ $(function() {
   function setMode(mode) {
     switch(currentMode) {
       case modes.PICTURE:
-        if ((mode == modes.DRAW || mode == modes.ERASE) && currentChooseImage != -1)
+        if ((mode != modes.PICTURE) && currentChooseImage != -1)
 	  // if image is choosed
 	  handlePictureEnter(currentChooseImage);
 	break;
@@ -606,6 +606,15 @@ $(function() {
 	  if (pre != -1 && currentChooseImage == -1)
 	    needOpenUpload = false;
 */
+	  break;
+	case modes.KEYBOARD:
+	  console.log('modes.KEYBOARD down');
+	  $("#textBox").css({
+	    "visibility": "visible",
+	    "width": "80",
+	    "height": "20"
+	  });
+	  $("#textBox").focus();
 	  break;
 	default:
 	  //console.log('mousedown default!');
