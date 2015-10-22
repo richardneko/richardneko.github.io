@@ -83,6 +83,7 @@ $(function() {
 
   initCanvasSettings();
   initImageLoader();
+  initTextBox();
   initMenuSettings();
   initTouchListeners();
   initMouseListeners();
@@ -116,6 +117,14 @@ $(function() {
       }
       reader.readAsDataURL(e.target.files[0]);
     }, false);
+  }
+
+  function initTextBox() {
+    $("#textBox").keyup(resizeTextBox).each(resizeTextBox);
+  }
+
+  function resizeTextBox() {
+    $(this).attr('cols', $(this).val().length);
   }
 
   function initImgArray() {
@@ -611,9 +620,10 @@ $(function() {
 	  console.log('modes.KEYBOARD down');
 	  $("#textBox").css({
 	    "visibility": "visible",
-	    "width": "80",
-	    "height": "20"
+	    "top": pos.y,
+	    "left": pos.x
 	  });
+	  $("#textBox").attr('rows', "1");
 	  $("#textBox").focus();
 	  break;
 	default:

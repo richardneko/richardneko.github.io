@@ -15,6 +15,12 @@ input {
   height: 0;
 }
 
+#textBox {
+  display: block;
+  position: absolute;
+  visibility: hidden;
+}
+
 /* Setting button style */
 #setting {
   list-style: none;
