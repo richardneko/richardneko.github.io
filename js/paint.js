@@ -260,7 +260,8 @@ $(function() {
     switch(currentMode) {
       case modes.PICTURE:
         if ((mode == modes.DRAW || mode == modes.ERASE) && currentChooseImage != -1)
-	  unchooseImage();
+	  // if image is choosed
+	  handlePictureEnter(currentChooseImage);
 	break;
     }
     currentMode = mode;
@@ -547,6 +548,8 @@ $(function() {
     canvas.addEventListener('mousedown', function (evt) {
       if (menuShow) {
         showHideMenu(openMenu, false);
+	if (currentMode == modes.PICTURE)
+	  needOpenUpload = false;
 	return;
       }
       setMenuTimer(true);
