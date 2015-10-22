@@ -165,12 +165,15 @@ $(function() {
     // delete
     if (type ==  0) {
       var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 + deleteButtonSize / 2;
-      var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;
     // enter
     } else {
       var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 - deleteButtonSize * 3 / 2;
-      var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;    
     }
+    if (imagePos[imageNum].y < canvas.height / 2)
+      var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;
+    else
+      var bottomY = imagePos[imageNum].y - deleteButtonSize - deleteButtonGap;
+
     return {
       x: bottomX,
       y: bottomY
@@ -693,8 +696,11 @@ $(function() {
     // redraw current image
     if (currentChooseImage != -1) {
       redrawImage(currentChooseImage);
-      drawImageAnchorEdge(currentChooseImage);
       drawImageDeleteButton(currentChooseImage);
+      if (isImageOnload)
+        drawImageAnchorEdge(currentChooseImage);
+      else
+        drawImageEdge(currentChooseImage);
     }
   }
 
