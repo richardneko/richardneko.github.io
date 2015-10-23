@@ -19,6 +19,7 @@ input {
   display: block;
   position: absolute;
   visibility: hidden;
+  border: 0;
 }
 
 /* Setting button style */

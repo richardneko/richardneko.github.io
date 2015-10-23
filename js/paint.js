@@ -19,6 +19,7 @@ $(function() {
   var canvas = document.getElementById('paintCanvas');
   var ctx = canvas.getContext("2d");
   var fileloader = document.getElementById('fileUpload');
+  var textInput = document.getElementById('textBox');
 
   var modes = {
     DRAW: 1,
@@ -33,6 +34,7 @@ $(function() {
   var menuShow = false;
   var menuCounter = false;
   var isImageOnload = false;
+  var isTexting = false;
 
   var colors = ['black', 'blue', 'red', 'yellow'];
   var sizes = [5, 10, 20, 40];
@@ -81,6 +83,17 @@ $(function() {
 
   var needOpenUpload = true;
 
+  // Text information
+  var TEXT_DEFAULT_LEN = 10;
+  var textMaxRows = 0;
+  var textMaxCols = 0;
+  var currentText = 0;
+  var textMessage = new Array();
+  var textPos = new Array();
+  var textSize = new Array();
+  var textColor = new Array();
+  var textColSize = new Array();
+
   initCanvasSettings();
   initImageLoader();
   initTextBox();
@@ -120,11 +133,91 @@ $(function() {
   }
 
   function initTextBox() {
-    $("#textBox").keyup(resizeTextBox).each(resizeTextBox);
+    //$("#textBox").keyup(resizeTextBox).each(resizeTextBox);
+    //$("#textBox").oninput(resizeTextBox).each(resizeTextBox);
+    textInput.addEventListener('input', resizeTextBox, false);
+    $("#textBox").keyup(handleTextKeyUp);
+  }
+
+  function isPrintableKey(keycode) {
+      var valid = 
+        (keycode > 47 && keycode < 58)   || // number keys
+        (keycode > 64 && keycode < 91)   || // letter keys
+        (keycode > 95 && keycode < 112)  || // numpad keys
+        (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
+        (keycode > 218 && keycode < 223) || // [\]' (in order)
+	keycode == 32 || keycode == 13   || keycode == 8; // spacebar, enter, backspace
+
+      return valid;
+  }
+
+  function printText() {
+    console.log('textMaxRows: ' + (textMaxRows - 1));
+    console.log('textColSize[' + (textMaxRows - 1) + ']: ' + textColSize[textMaxRows - 1]);
+    console.log('textMaxCols: ' + textMaxCols);
+  }
+  
+  function handleTextKeyUp(e) {
+    var code = e.keyCode;
+    
+    if (code == 13 || code == 8) {
+      if (textColSize[textMaxRows - 1] != 0)
+        textColSize[textMaxRows - 1] --;
+    }
+    
+    if (code == 13) {  			// enter key press
+      textMaxRows ++;
+      textColSize[textMaxRows - 1] = 0;
+      $(this).attr('rows', textMaxRows);
+    } else if (code == 8) {  		// backspace key press
+      if (textColSize[textMaxRows - 1] <= 0) {	// no text in current row
+        if (textMaxRows > 1)  {
+	  textMaxRows --;
+	  $(this).attr('rows', textMaxRows);
+	} else {
+	  textMaxCols = 0;
+	  $(this).val('');
+	  $(this).attr('cols', TEXT_DEFAULT_LEN);
+	}
+      } else
+        textColSize[textMaxRows - 1] --;
+    }
+    var target = e.target;
+    textMessage[currentText] = target.value;
   }
 
   function resizeTextBox() {
-    $(this).attr('cols', $(this).val().length);
+    textColSize[textMaxRows - 1] ++;
+
+    if (textColSize[textMaxRows - 1] > textMaxCols)
+      textMaxCols = textColSize[textMaxRows - 1];
+    
+    $(this).attr('cols', textMaxCols);
+  }
+
+  function showTextBox(enable) {
+    if (enable) {
+      $("#textBox").css({
+        "visibility": "visible",
+        "top": textPos[currentText].y,
+        "left": textPos[currentText].x
+      });
+      $("#textBox").focus();
+    } else {
+      $("#textBox").css("visibility", "hidden");
+    }
+  }
+
+  function clearTextInfo() {
+
+    textMaxRows = 1;
+    textMaxCols = 0;
+    currentText = 0;
+    textMessage = [];
+    textPos = [];
+    textSize = [];
+    textColor = [];
+    isTexting = false;
   }
 
   function initImgArray() {
@@ -171,17 +264,30 @@ $(function() {
   }
 
   function findButtonPosition(imageNum, type) {
-    // delete
-    if (type ==  0) {
-      var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 + deleteButtonSize / 2;
-    // enter
-    } else {
-      var bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 - deleteButtonSize * 3 / 2;
+    var bottomX;
+    var bottomY;
+    if (currentMode == modes.PICTURE) {
+      // delete
+      if (type ==  0) {
+        bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 + deleteButtonSize / 2;
+      // enter
+      } else {
+        bottomX = imagePos[imageNum].x + imageWidth[imageNum] / 2 - deleteButtonSize * 3 / 2;
+      }
+      if (imagePos[imageNum].y < canvas.height / 2)
+        bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;
+      else
+        bottomY = imagePos[imageNum].y - deleteButtonSize - deleteButtonGap;
+    } else if (currentMode == modes.KEYBOARD) {
+      // delete
+      if (type ==  0) {
+        bottomX = textPos[imageNum].x + deleteButtonSize * 3 / 2;
+      // enter
+      } else {
+        bottomX = textPos[imageNum].x;
+      }
+      bottomY = textPos[imageNum].y - deleteButtonSize * 3 / 2 - deleteButtonGap;
     }
-    if (imagePos[imageNum].y < canvas.height / 2)
-      var bottomY = imagePos[imageNum].y + imageHeight[imageNum] + deleteButtonGap;
-    else
-      var bottomY = imagePos[imageNum].y - deleteButtonSize - deleteButtonGap;
 
     return {
       x: bottomX,
@@ -206,7 +312,6 @@ $(function() {
     ctx.moveTo(buttonPos.x + deleteButtonSize - 10, buttonPos.y + 10);
     ctx.lineTo(buttonPos.x + 10, buttonPos.y + deleteButtonSize - 10);
     ctx.stroke();
-
     buttonPos = findButtonPosition(imageNum, 1);
     ctx.beginPath();
     // draw button
@@ -617,14 +722,27 @@ $(function() {
 */
 	  break;
 	case modes.KEYBOARD:
-	  console.log('modes.KEYBOARD down');
-	  $("#textBox").css({
-	    "visibility": "visible",
-	    "top": pos.y,
-	    "left": pos.x
-	  });
-	  $("#textBox").attr('rows', "1");
-	  $("#textBox").focus();
+	  if (!isTexting) {
+	    isTexting = true;
+	    textMaxRows = 1;
+	    textColSize = [];
+            $("#textBox").css("font-size", sizes[currentSize - 1] + 'px').css("color", colors[currentColor - 1]);
+            $("#textBox").attr('rows', textMaxRows).attr('cols', TEXT_DEFAULT_LEN);
+	    $('#textBox').val('');
+	    textColSize[textMaxRows - 1] = 0;
+	    textMaxCols = 0;
+	    textPos[currentText] = pos;
+	    textColor[currentText] = colors[currentColor - 1];
+	    textSize[currentText] = sizes[currentSize - 1] + 'px';
+	    // show text area box
+	    showTextBox(true);
+	    drawImageDeleteButton(currentText);
+	  } else {
+            // check 'ok' button clicked
+	    if (enterButtonClicked(currentText, pos)) {
+              handlePictureEnter(currentText);
+            } 
+	  }
 	  break;
 	default:
 	  //console.log('mousedown default!');
@@ -811,13 +929,42 @@ $(function() {
   }
 
   function handlePictureEnter(imageNum) {
-    if (isImageOnload) {
-      imageCount ++;
-      pushImage(currentChooseImage);
-      unchooseImage();
-      isImageOnload = false;
-    } else {
-      unchooseImage();
+    switch (currentMode) {
+      case modes.PICTURE:
+        if (isImageOnload) {
+          imageCount ++;
+          pushImage(currentChooseImage);
+          unchooseImage();
+          isImageOnload = false;
+        } else {
+          unchooseImage();
+        }
+        break;
+      case modes.KEYBOARD:
+        drawText(imageNum);
+	currentText ++;
+	isTexting = false;
+	showTextBox(false);
+	break;
+    }
+  }
+
+  function drawText(textNum) {
+    ctx.save();
+    var fontArgs = ctx.font.split(' ');
+    ctx.font = textSize[textNum] + ' ' + fontArgs[fontArgs.length - 1];
+    ctx.fillStyle = textColor[textNum];
+    ctx.textBaseline="hanging";
+    fillAllText(textMessage[textNum], textPos[textNum].x, textPos[textNum].y);
+    ctx.restore();
+  }
+
+  function fillAllText(text, x, y) {
+    var lineHeight = ctx.measureText("M").width * 1.2;
+    var lines = text.split("\n");
+    for (var i = 0; i < lines.length; ++i) {
+      ctx.fillText(lines[i], x, y);
+      y += lineHeight;
     }
   }
 
@@ -1089,6 +1236,7 @@ $(function() {
         clearCanvas();
 	clearArray();
 	clearImageInfo();
+	clearTextInfo();
       }
       else
 	eraserChoose();
