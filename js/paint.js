@@ -290,7 +290,12 @@ $(function() {
       //} else {
         bottomX = textPos[imageNum].x;
       //}
-      bottomY = textPos[imageNum].y - deleteButtonSize * 3 / 2 - deleteButtonGap;
+      if (textPos[imageNum].y < canvas.height / 2) {
+        var lineHeight = ctx.measureText("M").width * 1.2 * (textareaMaxRows + 1);
+        bottomY = textPos[imageNum].y + lineHeight + deleteButtonGap;
+      }
+      else
+        bottomY = textPos[imageNum].y - deleteButtonSize * 3 / 2 - deleteButtonGap;
     }
 
     return {
