@@ -83,16 +83,19 @@ $(function() {
 
   var needOpenUpload = true;
 
-  // Text information
+  // Text area information
   var TEXT_DEFAULT_LEN = 10;
-  var textMaxRows = 0;
-  var textMaxCols = 0;
+  var textareaMaxRows = 0;
+  var textareaMaxCols = 0;
+  
+  // Text information
   var currentText = 0;
+  var maxText = 0;
   var textMessage = new Array();
   var textPos = new Array();
   var textSize = new Array();
   var textColor = new Array();
-  var textColSize = new Array();
+  var textareaColSize = new Array();
 
   initCanvasSettings();
   initImageLoader();
@@ -152,47 +155,47 @@ $(function() {
   }
 
   function printText() {
-    console.log('textMaxRows: ' + (textMaxRows - 1));
-    console.log('textColSize[' + (textMaxRows - 1) + ']: ' + textColSize[textMaxRows - 1]);
-    console.log('textMaxCols: ' + textMaxCols);
+    console.log('textareaMaxRows: ' + (textareaMaxRows - 1));
+    console.log('textareaColSize[' + (textareaMaxRows - 1) + ']: ' + textareaColSize[textareaMaxRows - 1]);
+    console.log('textareaMaxCols: ' + textareaMaxCols);
   }
   
   function handleTextKeyUp(e) {
     var code = e.keyCode;
     
     if (code == 13 || code == 8) {
-      if (textColSize[textMaxRows - 1] != 0)
-        textColSize[textMaxRows - 1] --;
+      if (textareaColSize[textareaMaxRows - 1] != 0)
+        textareaColSize[textareaMaxRows - 1] --;
     }
     
     if (code == 13) {  			// enter key press
-      textMaxRows ++;
-      textColSize[textMaxRows - 1] = 0;
-      $(this).attr('rows', textMaxRows);
+      textareaMaxRows ++;
+      textareaColSize[textareaMaxRows - 1] = 0;
+      $(this).attr('rows', textareaMaxRows);
     } else if (code == 8) {  		// backspace key press
-      if (textColSize[textMaxRows - 1] <= 0) {	// no text in current row
-        if (textMaxRows > 1)  {
-	  textMaxRows --;
-	  $(this).attr('rows', textMaxRows);
+      if (textareaColSize[textareaMaxRows - 1] <= 0) {	// no text in current row
+        if (textareaMaxRows > 1)  {
+	  textareaMaxRows --;
+	  $(this).attr('rows', textareaMaxRows);
 	} else {
-	  textMaxCols = 0;
+	  textareaMaxCols = 0;
 	  $(this).val('');
 	  $(this).attr('cols', TEXT_DEFAULT_LEN);
 	}
       } else
-        textColSize[textMaxRows - 1] --;
+        textareaColSize[textareaMaxRows - 1] --;
     }
     var target = e.target;
     textMessage[currentText] = target.value;
   }
 
   function resizeTextBox() {
-    textColSize[textMaxRows - 1] ++;
+    textareaColSize[textareaMaxRows - 1] ++;
 
-    if (textColSize[textMaxRows - 1] > textMaxCols)
-      textMaxCols = textColSize[textMaxRows - 1];
+    if (textareaColSize[textareaMaxRows - 1] > textareaMaxCols)
+      textareaMaxCols = textareaColSize[textareaMaxRows - 1];
     
-    $(this).attr('cols', textMaxCols);
+    $(this).attr('cols', textareaMaxCols);
   }
 
   function showTextBox(enable) {
@@ -210,9 +213,8 @@ $(function() {
 
   function clearTextInfo() {
 
-    textMaxRows = 1;
-    textMaxCols = 0;
     currentText = 0;
+    maxText = 0;
     textMessage = [];
     textPos = [];
     textSize = [];
@@ -280,12 +282,14 @@ $(function() {
         bottomY = imagePos[imageNum].y - deleteButtonSize - deleteButtonGap;
     } else if (currentMode == modes.KEYBOARD) {
       // delete
+      /*
       if (type ==  0) {
         bottomX = textPos[imageNum].x + deleteButtonSize * 3 / 2;
+      */
       // enter
-      } else {
+      //} else {
         bottomX = textPos[imageNum].x;
-      }
+      //}
       bottomY = textPos[imageNum].y - deleteButtonSize * 3 / 2 - deleteButtonGap;
     }
 
@@ -724,16 +728,9 @@ $(function() {
 	case modes.KEYBOARD:
 	  if (!isTexting) {
 	    isTexting = true;
-	    textMaxRows = 1;
-	    textColSize = [];
-            $("#textBox").css("font-size", sizes[currentSize - 1] + 'px').css("color", colors[currentColor - 1]);
-            $("#textBox").attr('rows', textMaxRows).attr('cols', TEXT_DEFAULT_LEN);
-	    $('#textBox').val('');
-	    textColSize[textMaxRows - 1] = 0;
-	    textMaxCols = 0;
-	    textPos[currentText] = pos;
-	    textColor[currentText] = colors[currentColor - 1];
-	    textSize[currentText] = sizes[currentSize - 1] + 'px';
+	    textAreaInit();
+	    // init for new input
+	    textInputInit(pos);
 	    // show text area box
 	    showTextBox(true);
 	    drawImageDeleteButton(currentText);
@@ -824,6 +821,39 @@ $(function() {
     }, false);
   }
 
+  function textAreaInit() {
+    textareaMaxRows = 1;
+    textareaColSize = [];
+    $("#textBox").css("font-size", sizes[currentSize - 1] + 'px').css("color", colors[currentColor - 1]);
+    $("#textBox").attr('rows', textareaMaxRows).attr('cols', TEXT_DEFAULT_LEN);
+    $('#textBox').val('');
+    textareaColSize[textareaMaxRows - 1] = 0;
+    textareaMaxCols = 0; 
+  }
+  
+  function textInputInit(pos) {
+    currentText = findAvaliableTextSpace();
+    console.log('textInputInit: ' + currentText);
+    textMessage[currentText] = '';
+    textPos[currentText] = pos;
+    textColor[currentText] = colors[currentColor - 1];
+    textSize[currentText] = sizes[currentSize - 1] + 'px';
+  }
+
+  function findAvaliableTextSpace() {
+    var i;
+    
+    if (maxText == 0)
+      return maxText;
+
+    for (i = 0; i < maxText; ++ i) {
+      if (textMessage == '')
+        break;
+    }
+
+    return i;
+  }
+
   function redrawImage(num) {
     ctx.drawImage(img[num], 0, 0, img[num].width, img[num].height,
         imagePos[num].x, imagePos[num].y, imageWidth[num], imageHeight[num]);
@@ -897,7 +927,7 @@ $(function() {
     redrawAll();
   }
 
-  function findAvaliableSpace() {
+  function findAvaliableImageSpace() {
     var i;
     for (i = 0; i < MAX_IMAGE_NUM; ++ i) {
       if (img[i] == -1)
@@ -913,7 +943,7 @@ $(function() {
       needOpenUpload = true;
       return;
     }
-    newImagePos = findAvaliableSpace();
+    newImagePos = findAvaliableImageSpace();
     if (newImagePos == -1)
       return;
     imagePos[newImagePos] = getMousePos(canvas, evt);
@@ -941,9 +971,17 @@ $(function() {
         }
         break;
       case modes.KEYBOARD:
-        drawText(imageNum);
-	currentText ++;
+        // text is null
+	if (textMessage[currentText].length == 0) {
+	  console.log('input text is null');
+	  textMessage[currentText] = '';
+	} else {
+	  //drawText(imageNum);
+	  pushText(currentText);
+	  maxText ++;
+	}
 	isTexting = false;
+	redrawAll();
 	showTextBox(false);
 	break;
     }
@@ -986,6 +1024,13 @@ $(function() {
     // x indicate that image push
     fullDrawX.push('p');
     // y indicate which image been pushed
+    fullDrawY.push(num);
+  }
+
+  function pushText(num) {
+    // x indicate that text push
+    fullDrawX.push('t');
+    // y indicate which text been pushed
     fullDrawY.push(num);
   }
 
@@ -1058,6 +1103,8 @@ $(function() {
 	  continue;
 	}
 	redrawImage(fullDrawY[i]);
+      } else if (fullDrawX[i] == 't') {
+        drawText(fullDrawY[i]);
       } else if (fullDrawX[i] == 'x') {
         continue;
       } else if (fullDrawX[i] == 'u') {
