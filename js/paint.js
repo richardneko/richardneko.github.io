@@ -97,23 +97,25 @@ $(function() {
   var textColor = new Array();
   var textareaColSize = new Array();
 
-  // Keyboard Layout.
+  // Keyboard Layout
   var kbItems = [];
-  kbItems[0] = [ '`','1','2','3','4','5','6','7','8','9','0','-','=','delete' ];
-  kbItems[1] = [ 'tab','q','w','e','r','t','y','u','i','o','p','[',']','\\' ];
-  kbItems[2] = [ 'caps','a','s','d','f','g','h','j','k','l', ';','\'','enter' ];
-  kbItems[3] = [ 'shift','z','x','c','v','b','n','m',',','.','/','reserved' ];
-  kbItems[4] = [ 'space'];
+  kbItems[0] = [ '`','1','2','3','4','5','6','7','8','9','0','-','=','Delete' ];
+  kbItems[1] = [ 'Tab','q','w','e','r','t','y','u','i','o','p','[',']','\\' ];
+  kbItems[2] = [ 'Caps','a','s','d','f','g','h','j','k','l', ';','\'','Enter' ];
+  kbItems[3] = [ 'Shift','z','x','c','v','b','n','m',',','.','/','Done' ];
+  kbItems[4] = [ 'Space'];
   var keyboardGap = 10;
   var keyDefaultSize = 50;
   var keyLongSize = 100;
-  var keyShiftSize = 170;
+  var keyShiftSize = 140;
+  var keyReservedSize = 130;
   var keyEnterSize = 110;
   var keySpaceSize = 880;
   var keyboardMaxWidth = 900;
   var keyboardMaxHeight = 310;
-  var keyboardPosX = new Array();
-  var keyboardPosY = new Array();
+  var keyboardPos;
+  var keyboardKeyPosX = new Array();
+  var keyboardKeyPosY = new Array();
   var keyboardWidth = new Array();
 
   initCanvasSettings();
@@ -603,6 +605,17 @@ $(function() {
     return false;
   }
 
+  function checkButtonClicked(p) {
+    if (currentChooseImage != -1 && deleteButtonClicked(currentChooseImage, p)) {
+      handlePictureDelete(currentChooseImage);
+      return true;
+    } else if (currentChooseImage != -1 && enterButtonClicked(currentChooseImage, p)) {
+      handlePictureEnter(currentChooseImage);
+      return true;
+    }
+    return false;
+  }
+
   // Add touch events
   function initTouchListeners() {
     canvas.addEventListener('touchstart', function (evt) {
@@ -693,12 +706,8 @@ $(function() {
           isDrawing = true;
 	  break;
 	case modes.PICTURE:
-	  if (currentChooseImage != -1 && deleteButtonClicked(currentChooseImage, pos)) {
-	    handlePictureDelete(currentChooseImage);
-	    needOpenUpload = false;
-	    return;
-	  } else if (currentChooseImage != -1 && enterButtonClicked(currentChooseImage, pos)) {
-	    handlePictureEnter(currentChooseImage);
+	  // check ok/delete button click
+	  if (checkButtonClicked(pos)) {
 	    needOpenUpload = false;
 	    return;
 	  }
@@ -733,14 +742,16 @@ $(function() {
 	    textInputInit(pos);
 	    // show text area box
 	    showTextBox(true);
-	    drawImageDeleteButton(currentText);
+	    //drawImageDeleteButton(currentText);
             // show on screen keyboard
             showKeyboard(pos);
 	  } else {
             // check 'ok' button clicked
+	    /*
 	    if (enterButtonClicked(currentText, pos)) {
               handlePictureEnter(currentText);
-            } 
+            }
+	    */
 	  }
 	  break;
 	default:
@@ -823,6 +834,7 @@ $(function() {
   }
 
   function showKeyboard(pos) {
+    keyboardPos = pos;
     drawKeyboardEdge(pos);
     drawKeyboardButtons(pos);
   }
@@ -842,20 +854,22 @@ $(function() {
   function chooseKeySize(keyStr) {
     var ret;
     switch (keyStr) {
-      case 'space':
+      case 'Space':
         ret = keySpaceSize;
         break;
-      case 'enter':
+      case 'Enter':
         ret = keyEnterSize;
 	break;
-      case 'shift':
+      case 'Shift':
         ret = keyShiftSize;
 	break;
-      case 'delete':
-      case 'tab':
-      case 'caps':
-      case 'reserved':
+      case 'Delete':
+      case 'Tab':
+      case 'Caps':
         ret = keyLongSize;
+	break;
+      case 'Done':
+        ret = keyReservedSize;
         break;
       default:
         ret = keyDefaultSize;
@@ -874,12 +888,12 @@ $(function() {
         curPosX = defPosX;
         curPosY = curPosY + keyDefaultSize + keyboardGap;
       }
-      keyboardPosX[i] = new Array();
-      keyboardPosY[i] = new Array();
+      keyboardKeyPosX[i] = new Array();
+      keyboardKeyPosY[i] = new Array();
       keyboardWidth[i] = new Array();
       for (var j = 0; j < kbItems[i].length; ++ j) {
-        keyboardPosX[i][j] = curPosX;
-	keyboardPosY[i][j] = curPosY;
+        keyboardKeyPosX[i][j] = curPosX;
+	keyboardKeyPosY[i][j] = curPosY;
 	keyboardWidth[i][j] = chooseKeySize(kbItems[i][j]);
 	drawKeyboardKey(i, j);
 	curPosX = curPosX + keyboardWidth[i][j] + keyboardGap;
@@ -888,12 +902,23 @@ $(function() {
   }
 
   function drawKeyboardKey(i, j) {
+    // draw key edge
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(keyboardPosX[i][j], keyboardPosY[i][j], keyboardWidth[i][j], keyDefaultSize);
+    //ctx.beginPath();
+    ctx.rect(keyboardKeyPosX[i][j], keyboardKeyPosY[i][j], keyboardWidth[i][j], keyDefaultSize);
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'black';
     ctx.stroke();
+    ctx.restore();
+    // draw key char
+    ctx.save();
+    ctx.font = '20px Arial';
+    ctx.fillStyle = 'black';
+    ctx.textBaseline="hanging";
+    var lineWidth = ctx.measureText(kbItems[i][j]).width;
+    var lineHeight = ctx.measureText('M').width * 1.2;
+    ctx.fillText(kbItems[i][j], keyboardKeyPosX[i][j] + keyboardWidth[i][j] / 2 - lineWidth / 2, 
+                                keyboardKeyPosY[i][j] + keyDefaultSize / 2 - lineHeight / 2);
     ctx.restore();
   }
 
