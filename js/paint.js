@@ -97,6 +97,25 @@ $(function() {
   var textColor = new Array();
   var textareaColSize = new Array();
 
+  // Keyboard Layout.
+  var kbItems = [];
+  kbItems[0] = [ '`','1','2','3','4','5','6','7','8','9','0','-','=','delete' ];
+  kbItems[1] = [ 'tab','q','w','e','r','t','y','u','i','o','p','[',']','\\' ];
+  kbItems[2] = [ 'caps','a','s','d','f','g','h','j','k','l', ';','\'','enter' ];
+  kbItems[3] = [ 'shift','z','x','c','v','b','n','m',',','.','/','reserved' ];
+  kbItems[4] = [ 'space'];
+  var keyboardGap = 10;
+  var keyDefaultSize = 50;
+  var keyLongSize = 100;
+  var keyShiftSize = 170;
+  var keyEnterSize = 110;
+  var keySpaceSize = 880;
+  var keyboardMaxWidth = 900;
+  var keyboardMaxHeight = 310;
+  var keyboardPosX = new Array();
+  var keyboardPosY = new Array();
+  var keyboardWidth = new Array();
+
   initCanvasSettings();
   initImageLoader();
   initTextBox();
@@ -136,8 +155,6 @@ $(function() {
   }
 
   function initTextBox() {
-    //$("#textBox").keyup(resizeTextBox).each(resizeTextBox);
-    //$("#textBox").oninput(resizeTextBox).each(resizeTextBox);
     textInput.addEventListener('input', resizeTextBox, false);
     $("#textBox").keyup(handleTextKeyUp);
   }
@@ -537,10 +554,7 @@ $(function() {
   }
 
   function unchooseImage() {
-    //if (currentChooseImage != -1) {  
-    //  pushImage(currentChooseImage);
-      currentChooseImage = -1;
-    //}
+    currentChooseImage = -1;
     redrawAll();
   }
 
@@ -564,21 +578,11 @@ $(function() {
       
       // other image choosed
       if (img[i] != -1 && checkPictureClicked(i, x, y)) {
-	//if (currentChooseImage != -1)
-	//  unchooseImage();
-	//currentChooseImage = i;
-	//redrawAll();
 	return i;
       }
     }
 
     return -1
-    
-    // none of image choosed
-//    if (currentChooseImage != -1)
-//      unchooseImage();
-
-    //return false;
   }
 
   function deleteButtonClicked(imageNum, mousePos) {
@@ -719,26 +723,19 @@ $(function() {
 	      needOpenUpload = false;
 	    }
 	  }
-/*
-	  var pre = currentChooseImage;
-	  isResizeChoose = resizeClicked(pos.x, pos.y);
-	  if (isResizeChoose == 0 && pictureClicked(pos.x, pos.y)) {
-	    moveStartPos = pos;
-	    isPictureChoose = true;
-	  }
-	  if (pre != -1 && currentChooseImage == -1)
-	    needOpenUpload = false;
-*/
 	  break;
 	case modes.KEYBOARD:
 	  if (!isTexting) {
 	    isTexting = true;
+	    // textarea init
 	    textAreaInit();
 	    // init for new input
 	    textInputInit(pos);
 	    // show text area box
 	    showTextBox(true);
 	    drawImageDeleteButton(currentText);
+            // show on screen keyboard
+            showKeyboard(pos);
 	  } else {
             // check 'ok' button clicked
 	    if (enterButtonClicked(currentText, pos)) {
@@ -805,7 +802,6 @@ $(function() {
 	  }
 	  break;  
 	default:
-	  //$('input').click();
 	  //console.log('mouseup default!');
       }
     }, false);
@@ -824,6 +820,81 @@ $(function() {
 	  //console.log('mouseleave default!');
       }
     }, false);
+  }
+
+  function showKeyboard(pos) {
+    drawKeyboardEdge(pos);
+    drawKeyboardButtons(pos);
+  }
+
+  function drawKeyboardEdge(p) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.fillStyle = 'white';
+    ctx.rect(p.x, p.y, keyboardMaxWidth, keyboardMaxHeight);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function chooseKeySize(keyStr) {
+    var ret;
+    switch (keyStr) {
+      case 'space':
+        ret = keySpaceSize;
+        break;
+      case 'enter':
+        ret = keyEnterSize;
+	break;
+      case 'shift':
+        ret = keyShiftSize;
+	break;
+      case 'delete':
+      case 'tab':
+      case 'caps':
+      case 'reserved':
+        ret = keyLongSize;
+        break;
+      default:
+        ret = keyDefaultSize;
+    }
+    return ret;
+  }
+
+  function drawKeyboardButtons(pos) {
+    var defPosX = pos.x + keyboardGap;
+    var defPosY = pos.y + keyboardGap;
+    var curPosX = defPosX;
+    var curPosY = defPosY;
+    
+    for (var i = 0; i < kbItems.length; ++ i) {
+      if (i > 0) {
+        curPosX = defPosX;
+        curPosY = curPosY + keyDefaultSize + keyboardGap;
+      }
+      keyboardPosX[i] = new Array();
+      keyboardPosY[i] = new Array();
+      keyboardWidth[i] = new Array();
+      for (var j = 0; j < kbItems[i].length; ++ j) {
+        keyboardPosX[i][j] = curPosX;
+	keyboardPosY[i][j] = curPosY;
+	keyboardWidth[i][j] = chooseKeySize(kbItems[i][j]);
+	drawKeyboardKey(i, j);
+	curPosX = curPosX + keyboardWidth[i][j] + keyboardGap;
+      }
+    }
+  }
+
+  function drawKeyboardKey(i, j) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(keyboardPosX[i][j], keyboardPosY[i][j], keyboardWidth[i][j], keyDefaultSize);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+    ctx.restore();
   }
 
   function textAreaInit() {
