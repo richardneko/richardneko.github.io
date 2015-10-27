@@ -243,7 +243,6 @@ $(function() {
   }
 
   function clearTextInfo() {
-
     currentText = 0;
     maxText = 0;
     textMessage = [];
@@ -417,6 +416,10 @@ $(function() {
 	  // if image is choosed
 	  handlePictureEnter(currentChooseImage);
 	break;
+      case modes.KEYBOARD:
+        if ((mode != modes.KEYBOARD) && isTexting)
+          handlePictureEnter(currentText);
+        break;
     }
     currentMode = mode;
   }
@@ -756,8 +759,8 @@ $(function() {
 	    showTextBox(true);
 	    //drawImageDeleteButton(currentText);
             // show on screen keyboard
-	    keyboardPos = getKeyboardPos(pos);
-            showKeyboard(keyboardPos);
+            keyboardInit(pos);
+	    showKeyboard(keyboardPos);
 	  } else {
             // check 'ok' button clicked
 	    /*
@@ -859,6 +862,11 @@ $(function() {
 	  //console.log('mouseleave default!');
       }
     }, false);
+  }
+
+  function keyboardInit(pos) {
+    keyboardPos = getKeyboardPos(pos);
+    kbItems = kbItemsLower;
   }
 
   function getKeyboardPos(p) {
