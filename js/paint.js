@@ -87,6 +87,7 @@ $(function() {
   var TEXT_DEFAULT_LEN = 10;
   var textareaMaxRows = 0;
   var textareaMaxCols = 0;
+  var textareaColSize = new Array();
   
   // Text information
   var currentText = 0;
@@ -95,15 +96,24 @@ $(function() {
   var textPos = new Array();
   var textSize = new Array();
   var textColor = new Array();
-  var textareaColSize = new Array();
 
   // Keyboard Layout
-  var kbItems = [];
-  kbItems[0] = [ '`','1','2','3','4','5','6','7','8','9','0','-','=','Delete' ];
-  kbItems[1] = [ 'Tab','q','w','e','r','t','y','u','i','o','p','[',']','\\' ];
-  kbItems[2] = [ 'Caps','a','s','d','f','g','h','j','k','l', ';','\'','Enter' ];
-  kbItems[3] = [ 'Shift','z','x','c','v','b','n','m',',','.','/','Done' ];
-  kbItems[4] = [ 'Space'];
+  var kbItemsLower = [];
+  kbItemsLower[0] = [ '`','1','2','3','4','5','6','7','8','9','0','-','=','Delete' ];
+  kbItemsLower[1] = [ 'Tab','q','w','e','r','t','y','u','i','o','p','[',']','\\' ];
+  kbItemsLower[2] = [ 'Caps','a','s','d','f','g','h','j','k','l', ';','\'','Enter' ];
+  kbItemsLower[3] = [ 'Shift','z','x','c','v','b','n','m',',','.','/','Done' ];
+  kbItemsLower[4] = [ 'Space'];
+  
+  var kbItemsUpper = [];
+  kbItemsUpper[0] = [ '~','!','@','#','$','%','^','&','*','(',')','_','+','Delete' ];
+  kbItemsUpper[1] = [ 'Tab','Q','W','E','R','T','Y','U','I','O','P','{','}','|' ];
+  kbItemsUpper[2] = [ 'Caps','A','S','D','F','G','H','J','K','L', ':','\"','Enter' ];
+  kbItemsUpper[3] = [ 'Shift','Z','X','C','V','B','N','M','<','>','?','Done' ];
+  kbItemsUpper[4] = [ 'Space'];
+  
+  var kbItems = kbItemsLower;
+  var keylayout = 0;
   var keyboardGap = 10;
   var keyDefaultSize = 50;
   var keyLongSize = 100;
@@ -114,6 +124,8 @@ $(function() {
   var keyboardMaxWidth = 900;
   var keyboardMaxHeight = 310;
   var keyboardPos;
+  var keyboardMove = false;
+  var keyboardMoveStartPos;
   var keyboardKeyPosX = new Array();
   var keyboardKeyPosY = new Array();
   var keyboardWidth = new Array();
@@ -744,7 +756,8 @@ $(function() {
 	    showTextBox(true);
 	    //drawImageDeleteButton(currentText);
             // show on screen keyboard
-            showKeyboard(pos);
+	    keyboardPos = getKeyboardPos(pos);
+            showKeyboard(keyboardPos);
 	  } else {
             // check 'ok' button clicked
 	    /*
@@ -752,6 +765,14 @@ $(function() {
               handlePictureEnter(currentText);
             }
 	    */
+	    if (keyboardClicked(pos)) {
+	      if (!keyboardKeyClicked(pos)) {
+	        keyboardMoveStartPos = pos;
+	        keyboardMove = true;
+	      } else {
+	        updateText();
+	      }
+	    }
 	  }
 	  break;
 	default:
@@ -779,6 +800,10 @@ $(function() {
 	    handleResize(isResizeChoose, pos.x, pos.y);
 	  } else if (isPictureChoose) {
 	    handleImageMove(pos.x, pos.y);
+	  }
+	case modes.KEYBOARD:
+	  if (keyboardMove) {
+	    handleKeyboardMove(pos.x, pos.y);
 	  }
 	  break;
 	default:
@@ -811,7 +836,10 @@ $(function() {
 	    isResizeChoose = 0;
 	    isPictureChoose = false;
 	  }
-	  break;  
+	  break;
+	case modes.KEYBOARD:
+	  keyboardMove = false;
+	  break;
 	default:
 	  //console.log('mouseup default!');
       }
@@ -833,8 +861,147 @@ $(function() {
     }, false);
   }
 
+  function getKeyboardPos(p) {
+    var keyY;
+    if (p.y > canvas.height / 2)
+      keyY = 0;
+    else
+      keyY = canvas.height / 2;
+
+    return {
+      x: canvas.width / 2 - keyboardMaxWidth / 2,
+      y: keyY,
+    };
+  }
+
+  function keyboardClicked(p) {
+    if ((p.x > keyboardPos.x && p.x < keyboardPos.x + keyboardMaxWidth) &&
+        (p.y > keyboardPos.y && p.y < keyboardPos.y + keyboardMaxHeight)) {
+      return true;
+    }
+    return false;
+  }
+
+  function keyboardKeyClicked(p) {
+    var ret = false;
+    for (var i = 0; i < kbItems.length; ++ i) {
+      for (var j = 0; j < kbItems[i].length; ++ j) {
+        if (checkKeyClicked(p, i, j)) {
+	  switch (kbItems[i][j]) {
+	    case 'Enter':
+	      replaceTextarea('\n');
+	      break;
+	    case 'Space':
+	      replaceTextarea(' ');
+	      break;
+	    case 'Tab':
+	      replaceTextarea('\t');
+	      break;
+	    case 'Delete':
+	      handleTextareaDelete();
+	      break;
+	    case 'Caps':
+	    case 'Shift':
+	      handleKeyLayout();
+	      break;
+	    case 'Done':
+	      handlePictureEnter(currentText);
+	      break;
+	    default:
+	      replaceTextarea(kbItems[i][j]);
+	      break;
+	  }
+	  ret = true;
+	  break;
+	}
+      }
+    }
+    return ret;
+  }
+
+  function handleKeyLayout() {
+    if (keylayout == 0) {
+      keylayout = 1;
+      kbItems = kbItemsUpper;
+    } else {
+      keylayout = 0;
+      kbItems = kbItemsLower;
+    }
+
+    showKeyboard(keyboardPos);
+  }
+
+  function updateText() {
+    textMessage[currentText] = $("#textBox").val();
+  }
+
+  function replaceTextarea(c) {
+    var oldTxt = $("#textBox").val();
+
+    // we may replaced '\t' to 8 spaces
+    if (c == '\t')
+      $("#textBox").val(oldTxt + '        ');
+    else
+      $("#textBox").val(oldTxt + c);
+    updateTextarea(c);
+  }
+
+  function handleTextareaDelete() {
+    var oldTxt = $("#textBox").val();
+    var newTxt;
+    newTxt = oldTxt.slice(0, -1);
+    $("#textBox").val(newTxt);
+    if (newTxt.length == 0) {
+      textareaMaxRows = 1;
+      textareaMaxCols = 0;
+      textareaColSize[textareaMaxRows - 1] = 0;
+      $("#textBox").val('');
+      $("#textBox").attr('cols', TEXT_DEFAULT_LEN);
+      $("#textBox").attr('rows', textareaMaxRows);
+      return;
+    }
+
+    $("#textBox").val(newTxt);
+
+    if (oldTxt[oldTxt.length - 1] == '\n') {
+      textareaMaxRows --;
+    } else if (oldTxt[oldTxt.length - 1] == '\t') {
+      textareaColSize[textareaMaxRows - 1] -= 8;
+    } else {
+      textareaColSize[textareaMaxRows - 1] --;
+    }
+    $("#textBox").attr('cols', textareaColSize[textareaMaxRows - 1] >= textareaMaxCols ? textareaColSize[textareaMaxRows - 1] : textareaMaxCols);
+    $("#textBox").attr('rows', textareaMaxRows);
+  }
+
+  function updateTextarea(c) {
+    if (c == '\n') {
+      textareaMaxRows ++;
+      textareaColSize[textareaMaxRows - 1] = 0;
+    } else if (c == '\t')
+      textareaColSize[textareaMaxRows - 1] += 8;
+    else
+      textareaColSize[textareaMaxRows - 1] ++;
+
+    if (textareaColSize[textareaMaxRows - 1] > textareaMaxCols)
+      textareaMaxCols = textareaColSize[textareaMaxRows - 1];
+    
+    $("#textBox").attr('rows', textareaMaxRows);
+    if (textareaMaxCols == 0 && c == '\n') 
+      $("#textBox").attr('cols', TEXT_DEFAULT_LEN);
+    else
+      $("#textBox").attr('cols', textareaMaxCols);
+  }
+
+  function checkKeyClicked(p, i, j) {
+    if ((p.x > keyboardKeyPosX[i][j] && p.x < keyboardKeyPosX[i][j] + keyboardWidth[i][j]) &&
+        (p.y > keyboardKeyPosY[i][j] && p.y < keyboardKeyPosY[i][j] + keyDefaultSize)) {
+      return true;
+    }
+    return false;
+  }
+
   function showKeyboard(pos) {
-    keyboardPos = pos;
     drawKeyboardEdge(pos);
     drawKeyboardButtons(pos);
   }
@@ -934,7 +1101,6 @@ $(function() {
   
   function textInputInit(pos) {
     currentText = findAvaliableTextSpace();
-    console.log('textInputInit: ' + currentText);
     textMessage[currentText] = '';
     textPos[currentText] = pos;
     textColor[currentText] = colors[currentColor - 1];
@@ -983,6 +1149,18 @@ $(function() {
     moveStartPos.x = x;
     moveStartPos.y = y;
     redrawAll();
+  }
+
+  function handleKeyboardMove(x, y) {
+    var dx = x - keyboardMoveStartPos.x;
+    var dy = y - keyboardMoveStartPos.y;
+
+    keyboardPos.x += dx;
+    keyboardPos.y += dy;
+    keyboardMoveStartPos.x = x;
+    keyboardMoveStartPos.y = y;
+    redrawAll();
+    showKeyboard(keyboardPos);
   }
 
   function handleResize(num, x, y) {
@@ -1074,10 +1252,8 @@ $(function() {
       case modes.KEYBOARD:
         // text is null
 	if (textMessage[currentText].length == 0) {
-	  console.log('input text is null');
 	  textMessage[currentText] = '';
 	} else {
-	  //drawText(imageNum);
 	  pushText(currentText);
 	  maxText ++;
 	}
@@ -1186,14 +1362,14 @@ $(function() {
     var chooseLen = -1;
     
     for (var i = 0; i < fullDrawX.length; i ++) {
-      if (fullDrawX[i] == 'd') {
+      if (fullDrawX[i] == 'd') {  // mouse down
 	chooseLen = chooseLen + 1;
 	ctx.lineWidth = sizes[fullDrawSize[chooseLen] - 1];
 	ctx.strokeStyle = fullDrawColor[chooseLen];
 	ctx.beginPath();
 	ctx.moveTo(fullDrawX[i + 1], fullDrawY[i + 1]);
 	i = i + 1;
-      } else if(fullDrawX[i] == 'p') {
+      } else if(fullDrawX[i] == 'p') {  // picture
 	if (currentChooseImage != -1 && currentChooseImage == fullDrawY[i] && isImageOnload) {
 	  // position changed
 	  fullDrawX[i] = 'x';
@@ -1204,11 +1380,11 @@ $(function() {
 	  continue;
 	}
 	redrawImage(fullDrawY[i]);
-      } else if (fullDrawX[i] == 't') {
+      } else if (fullDrawX[i] == 't') {  // text
         drawText(fullDrawY[i]);
-      } else if (fullDrawX[i] == 'x') {
+      } else if (fullDrawX[i] == 'x') {  // deleted
         continue;
-      } else if (fullDrawX[i] == 'u') {
+      } else if (fullDrawX[i] == 'u') {  // mouse up
         ctx.stroke();
       } else {
         ctx.lineTo(fullDrawX[i], fullDrawY[i]);
