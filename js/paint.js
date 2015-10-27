@@ -1092,7 +1092,8 @@ $(function() {
   function textAreaInit() {
     textareaMaxRows = 1;
     textareaColSize = [];
-    $("#textBox").css("font-size", sizes[currentSize - 1] + 'px').css("color", colors[currentColor - 1]);
+    // text may need bigger px
+    $("#textBox").css("font-size", sizes[currentSize - 1] + 10 + 'px').css("color", colors[currentColor - 1]);
     $("#textBox").attr('rows', textareaMaxRows).attr('cols', TEXT_DEFAULT_LEN);
     $('#textBox').val('');
     textareaColSize[textareaMaxRows - 1] = 0;
@@ -1104,7 +1105,8 @@ $(function() {
     textMessage[currentText] = '';
     textPos[currentText] = pos;
     textColor[currentText] = colors[currentColor - 1];
-    textSize[currentText] = sizes[currentSize - 1] + 'px';
+    // text may need bigger px
+    textSize[currentText] = sizes[currentSize - 1] + 10 + 'px';
   }
 
   function findAvaliableTextSpace() {
