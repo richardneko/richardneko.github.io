@@ -1627,6 +1627,9 @@ $(function() {
 	    showHideMenu(openMenu, false);
 	  }
 	  return;
+	} else if (menuChoose[i] == '#off') {
+	  $('#power_off').click();
+	  return;
 	}
 
 	switch (currentMenu) {
