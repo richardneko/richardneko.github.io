@@ -136,7 +136,7 @@ $(function() {
   initMenuSettings();
   initTouchListeners();
   initMouseListeners();
-  initKeyboard();
+  //initKeyboard();
 
   function initCanvasSettings() {
     // Make canvas full page
