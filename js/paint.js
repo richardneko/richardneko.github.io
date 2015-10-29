@@ -7,7 +7,7 @@ $(function() {
     this.splice(0, 0, this.splice(idx, 1)[0]);
   };
 
-  // move array element to the top
+  // move array element to the back
   Array.prototype.moveBack = function(idx) {
     if (idx >= this.length - 1)
       return;
@@ -136,6 +136,7 @@ $(function() {
   initMenuSettings();
   initTouchListeners();
   initMouseListeners();
+  initKeyboard();
 
   function initCanvasSettings() {
     // Make canvas full page
@@ -167,6 +168,74 @@ $(function() {
       reader.readAsDataURL(e.target.files[0]);
     }, false);
   }
+
+/* keyboard canvas function for future use
+  function initKeyboard() {
+    var pos = {
+      x: 0,
+      y: 0
+    };
+    // init keyboard canvas
+    $('body').append('<canvas id="kcanvas"></canvas>');
+    // css for keyboard
+    $('#kcanvas').css({
+      'z-index': '2',
+      'height': '320',
+      'width': '910',
+      'border': 'black 1px solid',
+      'top': '0',
+      'left': '0'
+    });
+    canvas_k = document.getElementById('kcanvas');
+    ctx_k = canvas_k.getContext("2d");
+    drawKeyboardButtons(pos, ctx_k) 
+  }
+
+  function drawKeyboardButtons(pos, context) {
+    var defPosX = pos.x + keyboardGap;
+    var defPosY = pos.y + keyboardGap;
+    var curPosX = defPosX;
+    var curPosY = defPosY;
+
+    for (var i = 0; i < kbItems.length; ++ i) {
+      if (i > 0) {
+        curPosX = defPosX;
+        curPosY = curPosY + keyDefaultSize + keyboardGap;
+      }
+      keyboardKeyPosX[i] = new Array();
+      keyboardKeyPosY[i] = new Array();
+      keyboardWidth[i] = new Array();
+      for (var j = 0; j < kbItems[i].length; ++ j) {
+        keyboardKeyPosX[i][j] = curPosX;
+        keyboardKeyPosY[i][j] = curPosY;
+        keyboardWidth[i][j] = chooseKeySize(kbItems[i][j]);
+        drawKeyboardKey(i, j, context);
+        curPosX = curPosX + keyboardWidth[i][j] + keyboardGap;
+      }
+    }
+  }
+
+  function drawKeyboardKey(i, j, context) {
+    // draw key edge
+    context.save();
+    //ctx.beginPath();
+    context.rect(keyboardKeyPosX[i][j], keyboardKeyPosY[i][j], keyboardWidth[i][j], keyDefaultSize);
+    context.lineWidth = 2;
+    context.strokeStyle = 'black';
+    context.stroke();
+    context.restore();
+    // draw key char
+    context.save();
+    context.font = '20px Arial';
+    context.fillStyle = 'black';
+    context.textBaseline="hanging";
+    var lineWidth = context.measureText(kbItems[i][j]).width;
+    var lineHeight = context.measureText('M').width * 1.2;
+    context.fillText(kbItems[i][j], keyboardKeyPosX[i][j] + keyboardWidth[i][j] / 2 - lineWidth / 2,
+                                keyboardKeyPosY[i][j] + keyDefaultSize / 2 - lineHeight / 2);
+    context.restore();
+  }
+*/
 
   function initTextBox() {
     textInput.addEventListener('input', resizeTextBox, false);
