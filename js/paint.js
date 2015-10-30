@@ -175,7 +175,7 @@ $(function() {
     var rect;
     
     // append html for canvas keyboard
-    $('body').append('<canvas id="kcanvas"></canvas>');
+    $('body').append('<canvas id="kcanvas" draggable="true"></canvas>');
     
     // css for keyboard
     $('#kcanvas').css({
@@ -272,7 +272,7 @@ $(function() {
 	console.log('x: ' + p.x + ', y: ' + p.y);
         
 	if (!keyboardKeyClicked(p)) {
-          keyboardMoveStartPos = p;
+          //keyboardMoveStartPos = p;
           keyboardMove = true;
         } else {
           updateText();
@@ -280,14 +280,28 @@ $(function() {
       }
     });
 
+    canvas_k.addEventListener('dragstart', function (evt) {
+      console.log('drag start');
+      if (currentMode == modes.KEYBOARD && keyboardMove) {
+        var style = window.getComputedStyle(evt.target, null);
+
+	evt.dataTransfer.setData("Text", 
+	(parseInt(style.getPropertyValue("left"), 10) - evt.clientX) + ',' + 
+	(parseInt(style.getPropertyValue("top"), 10) - evt.clientY));
+
+	showCanvasKeyboard(false);
+      }
+    }, false);
+/*
     canvas_k.addEventListener('mousemove', function (evt) {
       var p = getMousePos(canvas_k, evt);
       if (keyboardMove) {
         handleCanvasKeyboardMove(p.x, p.y);
       }
     }, false);
+*/
   }
-
+  
   function initTextBox() {
     textInput.addEventListener('input', resizeTextBox, false);
     $("#textBox").keyup(handleTextKeyUp);
@@ -962,6 +976,9 @@ $(function() {
 	  }
 	  break;
 	case modes.KEYBOARD:
+	  // workaround for keyboard may be clear
+	  if (isTexting) 
+	    showCanvasKeyboard(true);
 	  //keyboardMove = false;
 	  break;
 	default:
@@ -986,6 +1003,32 @@ $(function() {
 	  //console.log('mouseleave default!');
       }
     }, false);
+
+    canvas.addEventListener('dragover', function (evt) {
+      switch (currentMode) {
+        case modes.KEYBOARD:
+	  //dragCanvasKeyboard(evt);
+	  evt.preventDefault();
+	break;
+      }
+    }, false);
+
+    canvas.addEventListener('drop', function (evt) {
+      switch (currentMode) {
+        case modes.KEYBOARD:
+    	  dragCanvasKeyboard(evt);
+	  showCanvasKeyboard(true);
+	  evt.preventDefault();
+	  keyboardMove = false;
+        break;
+      }
+    }, false);
+  }
+
+  function dragCanvasKeyboard(evt) {
+    var offset = evt.dataTransfer.getData("Text").split(',');
+    canvas_k.style.left = (evt.clientX + parseInt(offset[0], 10)) + 'px';
+    canvas_k.style.top = (evt.clientY + parseInt(offset[1], 10)) + 'px';
   }
 
   function keyboardInit(pos) {
