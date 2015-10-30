@@ -136,7 +136,7 @@ $(function() {
   initMenuSettings();
   initTouchListeners();
   initMouseListeners();
-  //initKeyboard();
+  initCanvasKeyboard();
 
   function initCanvasSettings() {
     // Make canvas full page
@@ -169,31 +169,60 @@ $(function() {
     }, false);
   }
 
-/* keyboard canvas function for future use
-  function initKeyboard() {
-    var pos = {
-      x: 0,
-      y: 0
-    };
-    // init keyboard canvas
+  // init canvas keyboard
+  function initCanvasKeyboard() {
+    var pos;
+    var rect;
+    
+    // append html for canvas keyboard
     $('body').append('<canvas id="kcanvas"></canvas>');
+    
     // css for keyboard
     $('#kcanvas').css({
-      'z-index': '2',
-      'height': '320',
-      'width': '910',
       'border': 'black 1px solid',
-      'top': '0',
-      'left': '0'
+      'top': '0px',
+      'left': '0px',
+      "visibility": "hidden"
     });
+
     canvas_k = document.getElementById('kcanvas');
     ctx_k = canvas_k.getContext("2d");
-    drawKeyboardButtons(pos, ctx_k) 
+    canvas_k.height = 330;
+    canvas_k.width = 920;
+    drawCanvasKeyboardButtons(pos, ctx_k);
+    initCanvasKeyboardListeners();
   }
 
-  function drawKeyboardButtons(pos, context) {
-    var defPosX = pos.x + keyboardGap;
-    var defPosY = pos.y + keyboardGap;
+  function showCanvasKeyboard(enable) {
+    if (enable) {
+      $('#kcanvas').css({
+        "visibility": "visible",
+        "opacity": "1",
+        "transition-delay": "0s",
+        "z-index": "3"
+      });
+    } else {
+      $('#kcanvas').css({
+        "visibility": "hidden",
+        "opacity": "0",
+        "transition": "visibility 0s linear 0.3s,opacity 0.3s linear",
+        "z-index": "0" 
+      });
+    }
+  }
+
+  // get canvas keyboard position
+  function getCanvasKeyboardPos() {
+    var rect = canvas_k.getBoundingClientRect();
+    return {
+      x: rect.left,
+      y: rect.top
+    };
+  }
+
+  function drawCanvasKeyboardButtons(pos, context) {
+    var defPosX = keyboardGap + 10;
+    var defPosY = keyboardGap + 10;
     var curPosX = defPosX;
     var curPosY = defPosY;
 
@@ -209,13 +238,13 @@ $(function() {
         keyboardKeyPosX[i][j] = curPosX;
         keyboardKeyPosY[i][j] = curPosY;
         keyboardWidth[i][j] = chooseKeySize(kbItems[i][j]);
-        drawKeyboardKey(i, j, context);
+        drawCanvasKeyboardKey(i, j, context);
         curPosX = curPosX + keyboardWidth[i][j] + keyboardGap;
       }
     }
   }
 
-  function drawKeyboardKey(i, j, context) {
+  function drawCanvasKeyboardKey(i, j, context) {
     // draw key edge
     context.save();
     //ctx.beginPath();
@@ -235,13 +264,36 @@ $(function() {
                                 keyboardKeyPosY[i][j] + keyDefaultSize / 2 - lineHeight / 2);
     context.restore();
   }
-*/
+
+  function initCanvasKeyboardListeners() {
+    canvas_k.addEventListener('mousedown', function (evt) {
+      if (currentMode == modes.KEYBOARD && isTexting) {
+        var p = getMousePos(canvas_k, evt);
+	console.log('x: ' + p.x + ', y: ' + p.y);
+        
+	if (!keyboardKeyClicked(p)) {
+          keyboardMoveStartPos = p;
+          keyboardMove = true;
+        } else {
+          updateText();
+        }
+      }
+    });
+
+    canvas_k.addEventListener('mousemove', function (evt) {
+      var p = getMousePos(canvas_k, evt);
+      if (keyboardMove) {
+        handleCanvasKeyboardMove(p.x, p.y);
+      }
+    }, false);
+  }
 
   function initTextBox() {
     textInput.addEventListener('input', resizeTextBox, false);
     $("#textBox").keyup(handleTextKeyUp);
   }
 
+/* find it's printable key or not, keep it
   function isPrintableKey(keycode) {
       var valid = 
         (keycode > 47 && keycode < 58)   || // number keys
@@ -253,13 +305,8 @@ $(function() {
 
       return valid;
   }
+*/
 
-  function printText() {
-    console.log('textareaMaxRows: ' + (textareaMaxRows - 1));
-    console.log('textareaColSize[' + (textareaMaxRows - 1) + ']: ' + textareaColSize[textareaMaxRows - 1]);
-    console.log('textareaMaxCols: ' + textareaMaxCols);
-  }
-  
   function handleTextKeyUp(e) {
     var code = e.keyCode;
     
@@ -829,7 +876,8 @@ $(function() {
 	    //drawImageDeleteButton(currentText);
             // show on screen keyboard
             keyboardInit(pos);
-	    showKeyboard(keyboardPos);
+	    showCanvasKeyboard(true);
+	    //showKeyboard(keyboardPos);
 	  } else {
             // check 'ok' button clicked
 	    /*
@@ -837,6 +885,7 @@ $(function() {
               handlePictureEnter(currentText);
             }
 	    */
+	    /*
 	    if (keyboardClicked(pos)) {
 	      if (!keyboardKeyClicked(pos)) {
 	        keyboardMoveStartPos = pos;
@@ -845,6 +894,7 @@ $(function() {
 	        updateText();
 	      }
 	    }
+	    */
 	  }
 	  break;
 	default:
@@ -874,9 +924,11 @@ $(function() {
 	    handleImageMove(pos.x, pos.y);
 	  }
 	case modes.KEYBOARD:
+	  /*
 	  if (keyboardMove) {
 	    handleKeyboardMove(pos.x, pos.y);
 	  }
+	  */
 	  break;
 	default:
 	  //console.log('mousemove default!');
@@ -910,7 +962,7 @@ $(function() {
 	  }
 	  break;
 	case modes.KEYBOARD:
-	  keyboardMove = false;
+	  //keyboardMove = false;
 	  break;
 	default:
 	  //console.log('mouseup default!');
@@ -927,6 +979,9 @@ $(function() {
 	  isResizeChoose = 0;
 	  isPictureChoose = false;
 	  break;
+        case modes.KEYBOARD:
+          //keyboardMove = false;
+	  break;
 	default:
 	  //console.log('mouseleave default!');
       }
@@ -935,6 +990,10 @@ $(function() {
 
   function keyboardInit(pos) {
     keyboardPos = getKeyboardPos(pos);
+    $('#kcanvas').css({
+      'left': keyboardPos.x,
+      'top': keyboardPos.y,
+    });
     kbItems = kbItemsLower;
   }
 
@@ -1005,7 +1064,14 @@ $(function() {
       kbItems = kbItemsLower;
     }
 
-    showKeyboard(keyboardPos);
+    //showKeyboard(keyboardPos);
+    //drawCanvasKeyboardButtons(keyboardPos, ctx_k)
+    redrawCanvasKeyboard();
+  }
+
+  function redrawCanvasKeyboard() {
+    ctx_k.clearRect(0, 0, canvas_k.width, canvas_k.height);
+    drawCanvasKeyboardButtons(keyboardPos, ctx_k);
   }
 
   function updateText() {
@@ -1242,6 +1308,22 @@ $(function() {
     showKeyboard(keyboardPos);
   }
 
+  function handleCanvasKeyboardMove(x, y) {
+    var dx = x - keyboardMoveStartPos.x;
+    var dy = y - keyboardMoveStartPos.y;
+
+    keyboardPos.x += dx;
+    keyboardPos.y += dy;
+    keyboardMoveStartPos.x = x;
+    keyboardMoveStartPos.y = y;
+    $('#kcanvas').css({
+      'left': keyboardPos.x,
+      'top': keyboardPos.y,
+    });
+    //redrawAll();
+    //showKeyboard(keyboardPos);
+  }
+
   function handleResize(num, x, y) {
     switch (num) {
       case 1:
@@ -1339,6 +1421,7 @@ $(function() {
 	isTexting = false;
 	redrawAll();
 	showTextBox(false);
+	showCanvasKeyboard(false);
 	break;
     }
   }
