@@ -182,7 +182,8 @@ $(function() {
       'border': 'black 1px solid',
       'top': '0px',
       'left': '0px',
-      "visibility": "hidden"
+      'visibility': "hidden",
+      'background-color': 'white'
     });
 
     canvas_k = document.getElementById('kcanvas');
