@@ -271,6 +271,7 @@ $(function() {
       if (currentMode == modes.KEYBOARD && isTexting) {
         var p = getMousePos(canvas_k, evt);
         
+	evt.preventDefault();
 	if (!keyboardKeyClicked(p)) {
           keyboardOffset = getKeyboardOffset(evt);
           keyboardMove = true;
@@ -1719,6 +1720,7 @@ $(function() {
 	  }
 	  return;
 	} else if (menuChoose[i] == '#off') {
+	  menuChoosed(i, true);
 	  $('#power_off').click();
 	  return;
 	}
