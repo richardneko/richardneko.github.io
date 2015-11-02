@@ -247,7 +247,6 @@ $(function() {
   function drawCanvasKeyboardKey(i, j, context) {
     // draw key edge
     context.save();
-    //ctx.beginPath();
     context.rect(keyboardKeyPosX[i][j], keyboardKeyPosY[i][j], keyboardWidth[i][j], keyDefaultSize);
     context.lineWidth = 2;
     context.strokeStyle = 'black';
@@ -269,37 +268,33 @@ $(function() {
     canvas_k.addEventListener('mousedown', function (evt) {
       if (currentMode == modes.KEYBOARD && isTexting) {
         var p = getMousePos(canvas_k, evt);
-	console.log('x: ' + p.x + ', y: ' + p.y);
         
 	if (!keyboardKeyClicked(p)) {
-          //keyboardMoveStartPos = p;
+          keyboardOffset = getKeyboardOffset(evt);
           keyboardMove = true;
         } else {
           updateText();
         }
       }
     });
-
-    canvas_k.addEventListener('dragstart', function (evt) {
-      console.log('drag start');
-      if (currentMode == modes.KEYBOARD && keyboardMove) {
-        var style = window.getComputedStyle(evt.target, null);
-
-	evt.dataTransfer.setData("Text", 
-	(parseInt(style.getPropertyValue("left"), 10) - evt.clientX) + ',' + 
-	(parseInt(style.getPropertyValue("top"), 10) - evt.clientY));
-
-	showCanvasKeyboard(false);
-      }
-    }, false);
-/*
+    
     canvas_k.addEventListener('mousemove', function (evt) {
-      var p = getMousePos(canvas_k, evt);
       if (keyboardMove) {
-        handleCanvasKeyboardMove(p.x, p.y);
+        handleCanvasKeyboardMove(evt);
       }
     }, false);
-*/
+
+    canvas_k.addEventListener('mouseleave', function (evt) {
+      if (keyboardMove) {
+        handleCanvasKeyboardMove(evt);
+      }
+    }, false);
+    
+    canvas_k.addEventListener('mouseup', function (evt) {
+      if (keyboardMove) {
+        keyboardMove = false;
+      }
+    }, false);
   }
   
   function initTextBox() {
@@ -887,32 +882,11 @@ $(function() {
 	    textInputInit(pos);
 	    // show text area box
 	    showTextBox(true);
-	    //drawImageDeleteButton(currentText);
             // show on screen keyboard
             keyboardInit(pos);
 	    showCanvasKeyboard(true);
-	    //showKeyboard(keyboardPos);
-	  } else {
-            // check 'ok' button clicked
-	    /*
-	    if (enterButtonClicked(currentText, pos)) {
-              handlePictureEnter(currentText);
-            }
-	    */
-	    /*
-	    if (keyboardClicked(pos)) {
-	      if (!keyboardKeyClicked(pos)) {
-	        keyboardMoveStartPos = pos;
-	        keyboardMove = true;
-	      } else {
-	        updateText();
-	      }
-	    }
-	    */
 	  }
 	  break;
-	default:
-	  //console.log('mousedown default!');
       }
     });
 
@@ -938,14 +912,10 @@ $(function() {
 	    handleImageMove(pos.x, pos.y);
 	  }
 	case modes.KEYBOARD:
-	  /*
 	  if (keyboardMove) {
-	    handleKeyboardMove(pos.x, pos.y);
+	    handleCanvasKeyboardMove(evt);
 	  }
-	  */
 	  break;
-	default:
-	  //console.log('mousemove default!');
       }
     }, false);
 
@@ -976,13 +946,10 @@ $(function() {
 	  }
 	  break;
 	case modes.KEYBOARD:
-	  // workaround for keyboard may be clear
-	  if (isTexting) 
-	    showCanvasKeyboard(true);
-	  //keyboardMove = false;
+	  if (keyboardMove) {
+	    keyboardMove = false;
+	  }
 	  break;
-	default:
-	  //console.log('mouseup default!');
       }
     }, false);
   
@@ -996,31 +963,6 @@ $(function() {
 	  isResizeChoose = 0;
 	  isPictureChoose = false;
 	  break;
-        case modes.KEYBOARD:
-          //keyboardMove = false;
-	  break;
-	default:
-	  //console.log('mouseleave default!');
-      }
-    }, false);
-
-    canvas.addEventListener('dragover', function (evt) {
-      switch (currentMode) {
-        case modes.KEYBOARD:
-	  //dragCanvasKeyboard(evt);
-	  evt.preventDefault();
-	break;
-      }
-    }, false);
-
-    canvas.addEventListener('drop', function (evt) {
-      switch (currentMode) {
-        case modes.KEYBOARD:
-    	  dragCanvasKeyboard(evt);
-	  showCanvasKeyboard(true);
-	  evt.preventDefault();
-	  keyboardMove = false;
-        break;
       }
     }, false);
   }
@@ -1051,14 +993,6 @@ $(function() {
       x: canvas.width / 2 - keyboardMaxWidth / 2,
       y: keyY,
     };
-  }
-
-  function keyboardClicked(p) {
-    if ((p.x > keyboardPos.x && p.x < keyboardPos.x + keyboardMaxWidth) &&
-        (p.y > keyboardPos.y && p.y < keyboardPos.y + keyboardMaxHeight)) {
-      return true;
-    }
-    return false;
   }
 
   function keyboardKeyClicked(p) {
@@ -1107,8 +1041,6 @@ $(function() {
       kbItems = kbItemsLower;
     }
 
-    //showKeyboard(keyboardPos);
-    //drawCanvasKeyboardButtons(keyboardPos, ctx_k)
     redrawCanvasKeyboard();
   }
 
@@ -1187,23 +1119,6 @@ $(function() {
     return false;
   }
 
-  function showKeyboard(pos) {
-    drawKeyboardEdge(pos);
-    drawKeyboardButtons(pos);
-  }
-
-  function drawKeyboardEdge(p) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.fillStyle = 'white';
-    ctx.rect(p.x, p.y, keyboardMaxWidth, keyboardMaxHeight);
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'black';
-    ctx.stroke();
-    ctx.restore();
-  }
-
   function chooseKeySize(keyStr) {
     var ret;
     switch (keyStr) {
@@ -1228,30 +1143,6 @@ $(function() {
         ret = keyDefaultSize;
     }
     return ret;
-  }
-
-  function drawKeyboardButtons(pos) {
-    var defPosX = pos.x + keyboardGap;
-    var defPosY = pos.y + keyboardGap;
-    var curPosX = defPosX;
-    var curPosY = defPosY;
-    
-    for (var i = 0; i < kbItems.length; ++ i) {
-      if (i > 0) {
-        curPosX = defPosX;
-        curPosY = curPosY + keyDefaultSize + keyboardGap;
-      }
-      keyboardKeyPosX[i] = new Array();
-      keyboardKeyPosY[i] = new Array();
-      keyboardWidth[i] = new Array();
-      for (var j = 0; j < kbItems[i].length; ++ j) {
-        keyboardKeyPosX[i][j] = curPosX;
-	keyboardKeyPosY[i][j] = curPosY;
-	keyboardWidth[i][j] = chooseKeySize(kbItems[i][j]);
-	drawKeyboardKey(i, j);
-	curPosX = curPosX + keyboardWidth[i][j] + keyboardGap;
-      }
-    }
   }
 
   function drawKeyboardKey(i, j) {
@@ -1339,32 +1230,23 @@ $(function() {
     redrawAll();
   }
 
-  function handleKeyboardMove(x, y) {
-    var dx = x - keyboardMoveStartPos.x;
-    var dy = y - keyboardMoveStartPos.y;
+  function getKeyboardOffset(evt) {
+    var curTop = parseInt($('#kcanvas').css('top'), 10);
+    var curLeft = parseInt($('#kcanvas').css('left'), 10);
+    var dx = evt.clientX - curLeft;
+    var dy = evt.clientY - curTop;
 
-    keyboardPos.x += dx;
-    keyboardPos.y += dy;
-    keyboardMoveStartPos.x = x;
-    keyboardMoveStartPos.y = y;
-    redrawAll();
-    showKeyboard(keyboardPos);
+    return {
+      x: dx,
+      y: dy,
+    };
   }
 
-  function handleCanvasKeyboardMove(x, y) {
-    var dx = x - keyboardMoveStartPos.x;
-    var dy = y - keyboardMoveStartPos.y;
-
-    keyboardPos.x += dx;
-    keyboardPos.y += dy;
-    keyboardMoveStartPos.x = x;
-    keyboardMoveStartPos.y = y;
+  function handleCanvasKeyboardMove(evt) {
     $('#kcanvas').css({
-      'left': keyboardPos.x,
-      'top': keyboardPos.y,
+      'left': evt.clientX - keyboardOffset.x,
+      'top': evt.clientY - keyboardOffset.y,
     });
-    //redrawAll();
-    //showKeyboard(keyboardPos);
   }
 
   function handleResize(num, x, y) {
@@ -1430,7 +1312,7 @@ $(function() {
     if (newImagePos == -1)
       return;
     imagePos[newImagePos] = getMousePos(canvas, evt);
-    $('input').click();
+    $('#fileUpload').click();
   }
 
   function handlePictureDelete(imageNum) {
