@@ -77,6 +77,7 @@ $(function() {
   var imageWidth = new Array();
   var imageHeight = new Array();
   var imagePos = new Array();
+  var imagePriority = new Array();
  
   var deleteButtonSize = 50;
   var deleteButtonGap = 20;
@@ -503,6 +504,7 @@ $(function() {
     imageWidth = [];
     imageHeight = [];
     imagePos = [];
+    imagePriority = [];
   }
 
   // Size menu listener
@@ -713,18 +715,15 @@ $(function() {
     if (currentChooseImage != -1 && checkPictureClicked(currentChooseImage, x, y)) {
       return currentChooseImage;
     }
-    
     // check other image choosed
-    for (var i = 0; i < MAX_IMAGE_NUM; ++ i) {
-      if (i == currentChooseImage)
+    for (var i = (imagePriority.length - 1); i >= 0; -- i) {
+      if (imagePriority[i] == currentChooseImage)
         continue;
       
-      // other image choosed
-      if (img[i] != -1 && checkPictureClicked(i, x, y)) {
-	return i;
+      if (img[imagePriority[i]] != -1 && checkPictureClicked(imagePriority[i], x, y)) {
+        return imagePriority[i];
       }
     }
-
     return -1
   }
 
@@ -1319,6 +1318,11 @@ $(function() {
   function handlePictureDelete(imageNum) {
     if (isImageOnload)
       isImageOnload = false;
+    
+    var idx = imagePriority.indexOf(imageNum);
+    if (idx != -1)
+      imagePriority.splice(imagePriority.indexOf(imageNum), 1);
+
     img[imageNum] = -1;
     unchooseImage();
     imageCount --;
@@ -1328,6 +1332,7 @@ $(function() {
     switch (currentMode) {
       case modes.PICTURE:
         if (isImageOnload) {
+	  imagePriority.push(imageNum);
           imageCount ++;
           pushImage(currentChooseImage);
           unchooseImage();
