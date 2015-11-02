@@ -361,11 +361,12 @@ $(function() {
       $("#textBox").css({
         "visibility": "visible",
         "top": textPos[currentText].y,
-        "left": textPos[currentText].x
+        "left": textPos[currentText].x,
+	"z-index": "3"
       });
       $("#textBox").focus();
     } else {
-      $("#textBox").css("visibility", "hidden");
+      $("#textBox").css("visibility", "hidden").css("z-index", "0");
     }
   }
 
@@ -885,6 +886,8 @@ $(function() {
             // show on screen keyboard
             keyboardInit(pos);
 	    showCanvasKeyboard(true);
+	  } else {
+	    changeTextPos(pos);
 	  }
 	  break;
       }
@@ -1047,6 +1050,11 @@ $(function() {
   function redrawCanvasKeyboard() {
     ctx_k.clearRect(0, 0, canvas_k.width, canvas_k.height);
     drawCanvasKeyboardButtons(keyboardPos, ctx_k);
+  }
+
+  function changeTextPos(p) {
+    textPos[currentText] = p;
+    showTextBox(true);
   }
 
   function updateText() {
@@ -1484,7 +1492,7 @@ $(function() {
 	//ctx.stroke();
       }
     }
-    if (chooseLen != -1 && fullDrawX[fullDrawX.length - 1] != 'p')
+    if (chooseLen != -1 && fullDrawX[fullDrawX.length - 1] != 'p' && fullDrawX[fullDrawX.length - 1] != 't')
       ctx.stroke();
   }
 
