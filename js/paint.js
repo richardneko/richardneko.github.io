@@ -1193,7 +1193,7 @@ $(function() {
       return maxText;
 
     for (i = 0; i < maxText; ++ i) {
-      if (textMessage == '')
+      if (textMessage[i] == '')
         break;
     }
 
