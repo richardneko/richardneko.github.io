@@ -1174,12 +1174,16 @@ $(function() {
                                 keyboardKeyPosY[i][j] + keyDefaultSize / 2 - lineHeight / 2);
     ctx.restore();
   }
-
+  
   function textAreaInit() {
     textareaMaxRows = 1;
     textareaColSize = [];
     // text may need bigger px
-    $("#textBox").css("font-size", sizes[currentSize - 1] + 10 + 'px').css("color", colors[currentColor - 1]);
+    $("#textBox").css({
+      "font-family": "sans-serif",
+      "font-size": sizes[currentSize - 1] + 10 + 'px',
+      "color": colors[currentColor - 1]
+    });
     $("#textBox").attr('rows', textareaMaxRows).attr('cols', TEXT_DEFAULT_LEN);
     $('#textBox').val('');
     textareaColSize[textareaMaxRows - 1] = 0;
