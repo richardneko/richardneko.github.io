@@ -133,7 +133,6 @@ $(function() {
 
   initCanvasSettings();
   initImageLoader();
-  initTextBox();
   initMenuSettings();
   initTouchListeners();
   initMouseListeners();
@@ -298,63 +297,6 @@ $(function() {
         keyboardMove = false;
       }
     }, false);
-  }
-  
-  function initTextBox() {
-    textInput.addEventListener('input', resizeTextBox, false);
-    $("#textBox").keyup(handleTextKeyUp);
-  }
-
-/* find it's printable key or not, keep it
-  function isPrintableKey(keycode) {
-      var valid = 
-        (keycode > 47 && keycode < 58)   || // number keys
-        (keycode > 64 && keycode < 91)   || // letter keys
-        (keycode > 95 && keycode < 112)  || // numpad keys
-        (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
-        (keycode > 218 && keycode < 223) || // [\]' (in order)
-	keycode == 32 || keycode == 13   || keycode == 8; // spacebar, enter, backspace
-
-      return valid;
-  }
-*/
-
-  function handleTextKeyUp(e) {
-    var code = e.keyCode;
-    
-    if (code == 13 || code == 8) {
-      if (textareaColSize[textareaMaxRows - 1] != 0)
-        textareaColSize[textareaMaxRows - 1] --;
-    }
-    
-    if (code == 13) {  			// enter key press
-      textareaMaxRows ++;
-      textareaColSize[textareaMaxRows - 1] = 0;
-      $(this).attr('rows', textareaMaxRows);
-    } else if (code == 8) {  		// backspace key press
-      if (textareaColSize[textareaMaxRows - 1] <= 0) {	// no text in current row
-        if (textareaMaxRows > 1)  {
-	  textareaMaxRows --;
-	  $(this).attr('rows', textareaMaxRows);
-	} else {
-	  textareaMaxCols = 0;
-	  $(this).val('');
-	  $(this).attr('cols', TEXT_DEFAULT_LEN);
-	}
-      } else
-        textareaColSize[textareaMaxRows - 1] --;
-    }
-    var target = e.target;
-    textMessage[currentText] = target.value;
-  }
-
-  function resizeTextBox() {
-    textareaColSize[textareaMaxRows - 1] ++;
-
-    if (textareaColSize[textareaMaxRows - 1] > textareaMaxCols)
-      textareaMaxCols = textareaColSize[textareaMaxRows - 1];
-    
-    $(this).attr('cols', textareaMaxCols);
   }
 
   function showTextBox(enable) {
@@ -1076,6 +1018,7 @@ $(function() {
   function handleTextareaDelete() {
     var oldTxt = $("#textBox").val();
     var newTxt;
+
     newTxt = oldTxt.slice(0, -1);
     $("#textBox").val(newTxt);
     if (newTxt.length == 0) {
@@ -1097,7 +1040,7 @@ $(function() {
     } else {
       textareaColSize[textareaMaxRows - 1] --;
     }
-    $("#textBox").attr('cols', textareaColSize[textareaMaxRows - 1] >= textareaMaxCols ? textareaColSize[textareaMaxRows - 1] : textareaMaxCols);
+    $("#textBox").attr('cols', textareaColSize[textareaMaxRows - 1] >= textareaMaxCols ? textareaColSize[textareaMaxRows - 1] + 1 : textareaMaxCols + 1);
     $("#textBox").attr('rows', textareaMaxRows);
   }
 
@@ -1117,7 +1060,7 @@ $(function() {
     if (textareaMaxCols == 0 && c == '\n') 
       $("#textBox").attr('cols', TEXT_DEFAULT_LEN);
     else
-      $("#textBox").attr('cols', textareaMaxCols);
+      $("#textBox").attr('cols', textareaMaxCols + 1);
   }
 
   function checkKeyClicked(p, i, j) {
@@ -1182,7 +1125,8 @@ $(function() {
     $("#textBox").css({
       "font-family": "sans-serif",
       "font-size": sizes[currentSize - 1] + 10 + 'px',
-      "color": colors[currentColor - 1]
+      "color": colors[currentColor - 1],
+      "resize": "none"
     });
     $("#textBox").attr('rows', textareaMaxRows).attr('cols', TEXT_DEFAULT_LEN);
     $('#textBox').val('');
