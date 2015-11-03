@@ -1040,7 +1040,7 @@ $(function() {
     } else {
       textareaColSize[textareaMaxRows - 1] --;
     }
-    $("#textBox").attr('cols', textareaColSize[textareaMaxRows - 1] >= textareaMaxCols ? textareaColSize[textareaMaxRows - 1] + 1 : textareaMaxCols + 1);
+    $("#textBox").attr('cols', textareaColSize[textareaMaxRows - 1] >= textareaMaxCols ? textareaColSize[textareaMaxRows - 1] * 2 : textareaMaxCols * 2);
     $("#textBox").attr('rows', textareaMaxRows);
   }
 
@@ -1060,7 +1060,7 @@ $(function() {
     if (textareaMaxCols == 0 && c == '\n') 
       $("#textBox").attr('cols', TEXT_DEFAULT_LEN);
     else
-      $("#textBox").attr('cols', textareaMaxCols + 1);
+      $("#textBox").attr('cols', textareaMaxCols * 2);
   }
 
   function checkKeyClicked(p, i, j) {
