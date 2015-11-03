@@ -573,7 +573,7 @@ $(function() {
         "visibility": "visible",
 	"opacity": "1",
 	"transition-delay": "0s",
-	"z-index": "2"
+	"z-index": "4"
       });
       $("#setting").css("background-color", "#dedede");
     } else {
@@ -1131,7 +1131,11 @@ $(function() {
     $("#textBox").attr('rows', textareaMaxRows).attr('cols', TEXT_DEFAULT_LEN);
     $('#textBox').val('');
     textareaColSize[textareaMaxRows - 1] = 0;
-    textareaMaxCols = 0; 
+    textareaMaxCols = 0;
+    document.getElementById("textBox").addEventListener("mouseup", function() {
+      if (menuCounter)
+        setMenuTimer(false);
+    });
   }
   
   function textInputInit(pos) {
@@ -1338,6 +1342,7 @@ $(function() {
       menuCounter = true;
       counterId = setTimeout(function() {
         isDrawing = false;
+	needOpenUpload = false;
 	openMenu = '#menu';
         showHideMenu('#menu' ,true);
       }, 1000);
