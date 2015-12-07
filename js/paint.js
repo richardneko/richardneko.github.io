@@ -763,6 +763,7 @@ $(function() {
 	return;
       }
       evt.preventDefault();
+      setMenuTimer(true);
 
       var pos = getMousePos(canvas, evt);
       switch (currentMode) {
@@ -820,6 +821,9 @@ $(function() {
     });
 
     canvas.addEventListener('mousemove', function (evt) {
+      if (menuCounter)
+        setMenuTimer(false);
+
       var pos = getMousePos(canvas, evt);
       switch (currentMode) {
         case modes.DRAW:
@@ -846,6 +850,9 @@ $(function() {
     }, false);
 
     canvas.addEventListener('mouseup', function (evt) {
+      if (menuCounter)
+        setMenuTimer(false);
+    
       switch (currentMode) {
         case modes.DRAW:
         case modes.ERASE:
@@ -880,12 +887,6 @@ $(function() {
 	  isPictureChoose = false;
 	  break;
       }
-    }, false);
-
-    canvas.addEventListener('dblclick', function(evt) {
-        console.log('dblclick');
-        evt.preventDefault();
-	showHideMenu('#menu' ,true);
     }, false);
   }
 
@@ -1108,6 +1109,10 @@ $(function() {
     $('#textBox').val('');
     textareaColSize[textareaMaxRows - 1] = 0;
     textareaMaxCols = 0;
+    document.getElementById("textBox").addEventListener("mouseup", function() {
+      if (menuCounter)
+        setMenuTimer(false);
+    });
   }
   
   function textInputInit(pos) {
@@ -1312,7 +1317,7 @@ $(function() {
         isDrawing = false;
 	openMenu = '#menu';
         showHideMenu('#menu' ,true);
-      }, 1000);
+      }, 500);
     } else {
       menuCounter = false;
       clearTimeout(counterId);
