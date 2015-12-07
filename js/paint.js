@@ -82,8 +82,6 @@ $(function() {
   var deleteButtonSize = 50;
   var deleteButtonGap = 20;
 
-  var needOpenUpload = true;
-
   // Text area information
   var TEXT_DEFAULT_LEN = 10;
   var textareaMaxRows = 0;
@@ -159,7 +157,6 @@ $(function() {
 	  ctx.drawImage(img[newImagePos], 0, 0, img[newImagePos].width, img[newImagePos].height, 
 	  		imagePos[newImagePos].x, imagePos[newImagePos].y, imageWidth[newImagePos], imageHeight[newImagePos]);
 	  currentChooseImage = newImagePos;
-	  //imageCount ++;
 	  isImageOnload = true;
 	  redrawAll();
 	}
@@ -707,9 +704,6 @@ $(function() {
         showHideMenu(openMenu, false);
 	return;
       }
-      
-      //setMenuTimer(true);
-
       evt.preventDefault();
       switch (currentMode) {
         case modes.DRAW:
@@ -726,11 +720,6 @@ $(function() {
     });
 
     canvas.addEventListener('touchmove', function (evt) {
-      /*
-      if (menuCounter)
-        setMenuTimer(false);
-      */
-
       evt.preventDefault();
       switch (currentMode) {
         case modes.DRAW:
@@ -749,11 +738,6 @@ $(function() {
     }, false);
 
     canvas.addEventListener('touchend', function (evt) {
-      /*
-      if (menuCounter)
-        setMenuTimer(false);
-      */
-
       switch (currentMode) {
         case modes.DRAW:
         case modes.ERASE:
@@ -776,11 +760,8 @@ $(function() {
     canvas.addEventListener('mousedown', function (evt) {
       if (menuShow) {
         showHideMenu(openMenu, false);
-	if (currentMode == modes.PICTURE)
-	  needOpenUpload = false;
 	return;
       }
-      //setMenuTimer(true);
       evt.preventDefault();
 
       var pos = getMousePos(canvas, evt);
@@ -796,10 +777,8 @@ $(function() {
 	case modes.PICTURE:
 	  // check ok/delete button click
 	  if (checkButtonClicked(pos)) {
-	    needOpenUpload = false;
 	    return;
 	  }
-
 	  // only do move, resize on newly add image
 	  if (isImageOnload) {
 	    isResizeChoose = resizeClicked(pos.x, pos.y);
@@ -814,10 +793,10 @@ $(function() {
 	      if (ret != -1) {
 	        currentChooseImage = ret;
 		redrawAll();
-		needOpenUpload = false;
+	      } else {
+	        if (imageCount < MAX_IMAGE_NUM)
+                  handlePictureInput(evt); 
 	      }
-	    } else {
-	      needOpenUpload = false;
 	    }
 	  }
 	  break;
@@ -841,11 +820,6 @@ $(function() {
     });
 
     canvas.addEventListener('mousemove', function (evt) {
-      /*
-      if (menuCounter)
-        setMenuTimer(false);
-      */
-
       var pos = getMousePos(canvas, evt);
       switch (currentMode) {
         case modes.DRAW:
@@ -872,29 +846,15 @@ $(function() {
     }, false);
 
     canvas.addEventListener('mouseup', function (evt) {
-      /*
-      if (menuCounter)
-        setMenuTimer(false);
-      */
-
       switch (currentMode) {
         case modes.DRAW:
         case modes.ERASE:
           if (isDrawing) {
-            /*
-	    var pos = getMousePos(canvas, evt);
-	    drawContinue(pos.x, pos.y + 0.5);
-	    drawUp();
-	    ctx.lineTo(pos.x, pos.y + 0.5);
-            ctx.stroke();
-	    */
             isDrawing = false;
           }
 	  break;
 	case modes.PICTURE:
 	  if (isResizeChoose == 0 && isPictureChoose == false) {
-	    if (!isImageOnload && imageCount < MAX_IMAGE_NUM)
-	      handlePictureInput(evt);
 	  }
 	  else {
 	    isResizeChoose = 0;
@@ -1148,12 +1108,6 @@ $(function() {
     $('#textBox').val('');
     textareaColSize[textareaMaxRows - 1] = 0;
     textareaMaxCols = 0;
-    /*
-    document.getElementById("textBox").addEventListener("mouseup", function() {
-      if (menuCounter)
-        setMenuTimer(false);
-    });
-    */
   }
   
   function textInputInit(pos) {
@@ -1283,10 +1237,6 @@ $(function() {
   }
 
   function handlePictureInput(evt) {
-    if (!needOpenUpload) {
-      needOpenUpload = true;
-      return;
-    }
     newImagePos = findAvaliableImageSpace();
     if (newImagePos == -1)
       return;
@@ -1360,7 +1310,6 @@ $(function() {
       menuCounter = true;
       counterId = setTimeout(function() {
         isDrawing = false;
-	needOpenUpload = false;
 	openMenu = '#menu';
         showHideMenu('#menu' ,true);
       }, 1000);
