@@ -708,7 +708,7 @@ $(function() {
 	return;
       }
       
-      setMenuTimer(true);
+      //setMenuTimer(true);
 
       evt.preventDefault();
       switch (currentMode) {
@@ -726,8 +726,10 @@ $(function() {
     });
 
     canvas.addEventListener('touchmove', function (evt) {
+      /*
       if (menuCounter)
         setMenuTimer(false);
+      */
 
       evt.preventDefault();
       switch (currentMode) {
@@ -747,8 +749,10 @@ $(function() {
     }, false);
 
     canvas.addEventListener('touchend', function (evt) {
+      /*
       if (menuCounter)
         setMenuTimer(false);
+      */
 
       switch (currentMode) {
         case modes.DRAW:
@@ -776,7 +780,7 @@ $(function() {
 	  needOpenUpload = false;
 	return;
       }
-      setMenuTimer(true);
+      //setMenuTimer(true);
       evt.preventDefault();
 
       var pos = getMousePos(canvas, evt);
@@ -837,8 +841,10 @@ $(function() {
     });
 
     canvas.addEventListener('mousemove', function (evt) {
+      /*
       if (menuCounter)
         setMenuTimer(false);
+      */
 
       var pos = getMousePos(canvas, evt);
       switch (currentMode) {
@@ -866,18 +872,22 @@ $(function() {
     }, false);
 
     canvas.addEventListener('mouseup', function (evt) {
+      /*
       if (menuCounter)
         setMenuTimer(false);
+      */
 
       switch (currentMode) {
         case modes.DRAW:
         case modes.ERASE:
           if (isDrawing) {
-            var pos = getMousePos(canvas, evt);
+            /*
+	    var pos = getMousePos(canvas, evt);
 	    drawContinue(pos.x, pos.y + 0.5);
 	    drawUp();
 	    ctx.lineTo(pos.x, pos.y + 0.5);
             ctx.stroke();
+	    */
             isDrawing = false;
           }
 	  break;
@@ -910,6 +920,12 @@ $(function() {
 	  isPictureChoose = false;
 	  break;
       }
+    }, false);
+
+    canvas.addEventListener('dblclick', function(evt) {
+        console.log('dblclick');
+        evt.preventDefault();
+	showHideMenu('#menu' ,true);
     }, false);
   }
 
@@ -1132,10 +1148,12 @@ $(function() {
     $('#textBox').val('');
     textareaColSize[textareaMaxRows - 1] = 0;
     textareaMaxCols = 0;
+    /*
     document.getElementById("textBox").addEventListener("mouseup", function() {
       if (menuCounter)
         setMenuTimer(false);
     });
+    */
   }
   
   function textInputInit(pos) {
