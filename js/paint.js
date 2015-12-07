@@ -589,6 +589,30 @@ $(function() {
     }
   }
 
+  function setMenuPos(pos) {
+    console.log('pos.x: ' +  pos.x + ', pos.y: ' + pos.y);
+    if (pos.x < 250) {
+      x = 250;
+    } else if (canvas.width - pos.x < 200) {
+      x = canvas.width - 200;
+    } else {
+      x = pos.x;
+    }
+    
+    if (pos.y < 100) {
+      y = 100;
+    } else if (canvas.height - pos.y < 350) {
+      y = canvas.height - 350;
+    } else {
+      y = pos.y;
+    }
+
+    $("nav").css({
+      "left": x,
+      "top": y,
+    });
+  }
+
   /* 012 */
   /* 3 4 */
   /* 567 */
@@ -1322,6 +1346,9 @@ $(function() {
       counterId = setTimeout(function() {
         isDrawing = false;
 	openMenu = '#menu';
+	if (pos) {
+	  setMenuPos(pos);
+	}
         showHideMenu('#menu' ,true);
       }, 500);
     } else {
