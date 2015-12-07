@@ -762,10 +762,11 @@ $(function() {
         showHideMenu(openMenu, false);
 	return;
       }
-      evt.preventDefault();
-      setMenuTimer(true);
 
+      evt.preventDefault();
       var pos = getMousePos(canvas, evt);
+      setMenuTimer(true, pos);
+
       switch (currentMode) {
         case modes.DRAW:
 	case modes.ERASE:
@@ -857,6 +858,11 @@ $(function() {
         case modes.DRAW:
         case modes.ERASE:
           if (isDrawing) {
+            var pos = getMousePos(canvas, evt);
+            drawContinue(pos.x, pos.y + 0.5);
+            drawUp();
+            ctx.lineTo(pos.x, pos.y + 0.5);
+            ctx.stroke();
             isDrawing = false;
           }
 	  break;
@@ -1310,7 +1316,7 @@ $(function() {
     }
   }
 
-  function setMenuTimer(enable) {
+  function setMenuTimer(enable, pos) {
     if (enable) {
       menuCounter = true;
       counterId = setTimeout(function() {
