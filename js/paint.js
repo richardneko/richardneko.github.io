@@ -35,6 +35,7 @@ $(function() {
   var menuCounter = false;
   var isImageOnload = false;
   var isTexting = false;
+  var needOpenImage = false;
 
   var colors = ['black', 'blue', 'red', 'yellow'];
   var sizes = [5, 10, 20, 40];
@@ -45,7 +46,7 @@ $(function() {
   /* add here if need more sizes */
   var moreSizes = [];
 
-  var erases = ['erase', 'reset'];
+  var erases = ['erase', 'reset', 'undo'];
   var menuChoose = ['#size', '#color', '#zoom', '#erase', '#keyboard', '#pic', '#back', '#off'];
   var MENU_NONE = menuChoose.length;
 
@@ -586,6 +587,7 @@ $(function() {
       $(menuChoose[currentMenu] + ' ul').css("max-height", "0px");
       currentMenu = MENU_NONE;
       openMenu = '#menu';
+      needOpenImage = false;
     }
   }
 
@@ -821,7 +823,7 @@ $(function() {
 		redrawAll();
 	      } else {
 	        if (imageCount < MAX_IMAGE_NUM)
-                  handlePictureInput(evt); 
+		  needOpenImage = true;
 	      }
 	    }
 	  }
@@ -892,6 +894,10 @@ $(function() {
 	  break;
 	case modes.PICTURE:
 	  if (isResizeChoose == 0 && isPictureChoose == false) {
+	    if (needOpenImage) {
+	      handlePictureInput(evt);
+	      needOpenImage = false;
+	    }
 	  }
 	  else {
 	    isResizeChoose = 0;
@@ -1283,13 +1289,17 @@ $(function() {
     if (isImageOnload)
       isImageOnload = false;
     
-    var idx = imagePriority.indexOf(imageNum);
-    if (idx != -1)
-      imagePriority.splice(imagePriority.indexOf(imageNum), 1);
-
-    img[imageNum] = -1;
+    removeImage(imageNum);
     unchooseImage();
-    imageCount --;
+  }
+
+  function removeImage(num) {
+    var idx = imagePriority.indexOf(num);
+    if (idx != -1)
+      imagePriority.splice(imagePriority.indexOf(num), 1);
+    
+    img[num] = -1;
+    imageCount --;  
   }
 
   function handlePictureEnter(imageNum) {
@@ -1455,6 +1465,31 @@ $(function() {
       ctx.stroke();
   }
 
+  function handleUndo() {
+    if (fullDrawX.length > 0) {
+      for (var i = fullDrawX.length - 1; i => 0; -- i) {
+        if (fullDrawX[i] == 'u') {
+	  for (var j = i - 1; j >= 0; -- j) {
+	    if (fullDrawX[j] == 'd') {
+	      var delLen = i - j + 1;
+	      fullDrawX.splice(j, delLen);
+	      fullDrawY.splice(j, delLen);
+	      console.log(fullDrawX);
+	      break;
+	    }
+	  }
+	  break;
+	} else if (fullDrawX[i] == 'p') {
+	  removeImage(fullDrawY[i]);
+	  fullDrawX.splice(i, 1);
+	  fullDrawY.splice(i, 1);
+	  break;
+	}
+      }
+    }
+    redrawAll();
+  }
+
   function clearArray() {
     fullDrawX = [];
     fullDrawY = [];
@@ -1616,13 +1651,17 @@ $(function() {
 
   function addEraseListener(i) {
     $("#erase ul li:nth-child(" + (i + 1).toString() + ")").click(function() {
-      if (i) {
-        clearCanvas();
+      if (i == 1) {
+        // remove all the thing
+	clearCanvas();
 	clearArray();
 	clearImageInfo();
 	clearTextInfo();
-      }
-      else
+      } else if (i == 2) {
+        // undo
+        console.log('undo');
+	handleUndo();
+      } else
 	eraserChoose();
     });
   }

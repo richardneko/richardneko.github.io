@@ -134,10 +134,17 @@ nav {
 }
 
 #erase ul li {
-  background-image: url(../res/editor_trash_delete_recycle_bin_-512.png);
   background-position: center;
   background-size: 40px 40px;
   background-repeat: no-repeat;
+}
+
+#erase ul li:nth-child(2) {
+  background-image: url(../res/editor_trash_delete_recycle_bin_-512.png);
+}
+
+#erase ul li:nth-child(3) {
+  background-image: url(../res/undo.png);
 }
 
 #erase ul li:first-child {
