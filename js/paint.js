@@ -1302,6 +1302,11 @@ $(function() {
     imageCount --;  
   }
 
+  function removeText(num) {
+    textMessage[num] = '';
+    maxText --;
+  }
+
   function handlePictureEnter(imageNum) {
     switch (currentMode) {
       case modes.PICTURE:
@@ -1468,7 +1473,7 @@ $(function() {
   function handleUndo() {
     if (fullDrawX.length > 0) {
       for (var i = fullDrawX.length - 1; i => 0; -- i) {
-        if (fullDrawX[i] == 'u') {
+        if (fullDrawX[i] == 'u') {  // undo draw/erase
 	  for (var j = i - 1; j >= 0; -- j) {
 	    if (fullDrawX[j] == 'd') {
 	      var delLen = i - j + 1;
@@ -1479,12 +1484,18 @@ $(function() {
 	    }
 	  }
 	  break;
-	} else if (fullDrawX[i] == 'p') {
+	} else if (fullDrawX[i] == 'p') {  // undo picture
 	  removeImage(fullDrawY[i]);
 	  fullDrawX.splice(i, 1);
 	  fullDrawY.splice(i, 1);
 	  break;
-	}
+	} else if (fullDrawX[i] == 't') {  // undo text
+	  removeText(fullDrawY[i]);
+	  fullDrawX.splice(i, 1);
+	  fullDrawY.splice(i, 1);
+	  break;
+	} else
+	  continue;
       }
     }
     redrawAll();
