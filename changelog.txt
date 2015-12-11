@@ -1,0 +1,5 @@
+v1.000
+1. Pop-up menu on where you touch.
+2. Implement undo function.
+3. Change bootlogo.
+4. Reduce pop-up menu press time to 500 msecs.
