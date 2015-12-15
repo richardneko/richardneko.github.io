@@ -1472,7 +1472,7 @@ $(function() {
 
   function handleUndo() {
     if (fullDrawX.length > 0) {
-      for (var i = fullDrawX.length - 1; i => 0; -- i) {
+      for (var i = fullDrawX.length - 1; i >= 0; -- i) {
         if (fullDrawX[i] == 'u') {  // undo draw/erase
 	  for (var j = i - 1; j >= 0; -- j) {
 	    if (fullDrawX[j] == 'd') {
